@@ -23,7 +23,10 @@ function App() {
         body: JSON.stringify({ email }),
       });
 
-      const result = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      const result = contentType.includes('application/json')
+        ? await response.json()
+        : { error: 'Registration endpoint is not available. Try refreshing the page.' };
 
       if (!response.ok) {
         throw new Error(result.error || 'Could not save registration.');
