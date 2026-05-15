@@ -53,7 +53,7 @@ function App() {
           <p className="date-stamp">07.01.26</p>
         </header>
 
-        <div className="relative grid flex-1 items-center gap-12 pb-8 pt-16 lg:grid-cols-1 lg:pt-10">
+        <div className="relative grid flex-1 items-center gap-0 pb-8 pt-16 lg:grid-cols-1 lg:gap-12 lg:pt-10">
           <div className="relative z-20 max-w-4xl">
             <p className="animate-reveal text-xs font-black uppercase tracking-[0.62em] text-smoke/70 [animation-delay:120ms]">
               Collection 01
