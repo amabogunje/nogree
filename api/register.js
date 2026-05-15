@@ -1,4 +1,25 @@
+import { get, put } from '@vercel/blob';
+
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const logPathname = 'registered-emails.log';
+
+async function readCurrentLog() {
+  const existingLog = await get(logPathname, {
+    access: 'private',
+    useCache: false,
+  });
+
+  if (!existingLog) {
+    return '';
+  }
+
+  if (!existingLog.stream) {
+    return '';
+  }
+
+  const response = new Response(existingLog.stream);
+  return response.text();
+}
 
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
@@ -13,8 +34,23 @@ export default async function handler(request, response) {
     return;
   }
 
-  response.status(501).json({
-    error:
-      'Registration logging is only available on the local dev server. Vercel needs a database or form service to store emails permanently.',
-  });
+  try {
+    const entry = `${new Date().toISOString()}\t${email}\n`;
+    const currentLog = await readCurrentLog();
+
+    await put(logPathname, `${currentLog}${entry}`, {
+      access: 'private',
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: 'text/plain; charset=utf-8',
+    });
+
+    response.status(200).json({
+      ok: true,
+    });
+  } catch {
+    response.status(500).json({
+      error: 'Could not save registration.',
+    });
+  }
 }
