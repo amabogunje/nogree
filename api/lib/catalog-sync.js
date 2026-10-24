@@ -21,6 +21,7 @@ export async function syncPrintfulCatalog() {
   const storeId = getStoreId();
   const listedProducts = await printfulRequest('/sync/products?limit=100', { storeId });
   const activeSyncProductIds = new Set((listedProducts || []).map((product) => Number(product.id)));
+  const catalogProductIds = new Set();
   const syncedProducts = [];
 
   for (const [index, listedProduct] of (listedProducts || []).entries()) {
@@ -73,6 +74,10 @@ export async function syncPrintfulCatalog() {
     for (const variant of result.sync_variants) {
       const imageUrl = variant.files?.find((file) => file.type === 'preview')?.preview_url || variant.product?.image;
       const retailPriceCents = Math.round(Number(variant.retail_price) * 100);
+
+      if (variant.product?.product_id) {
+        catalogProductIds.add(Number(variant.product.product_id));
+      }
 
       await sql`
         insert into product_variants (
@@ -134,5 +139,10 @@ export async function syncPrintfulCatalog() {
     `;
   }
 
-  return { storeId, products: syncedProducts, deactivatedProducts: removedProductIds.length };
+  return {
+    storeId,
+    products: syncedProducts,
+    deactivatedProducts: removedProductIds.length,
+    catalogProductIds: [...catalogProductIds],
+  };
 }

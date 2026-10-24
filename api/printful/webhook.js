@@ -1,8 +1,9 @@
 import crypto from 'node:crypto';
 import { sql } from '../lib/db.js';
 import { syncPrintfulCatalog } from '../lib/catalog-sync.js';
+import { configureCatalogWebhooks } from '../lib/printful-webhooks.js';
 
-const catalogEvents = new Set(['product_synced', 'product_updated', 'product_deleted']);
+const catalogEvents = new Set(['product_synced', 'product_updated', 'product_deleted', 'stock_updated']);
 
 function hasValidSecret(request) {
   const expected = process.env.PRINTFUL_WEBHOOK_SECRET;
@@ -57,6 +58,7 @@ export default async function handler(request, response) {
     }
 
     const result = await syncPrintfulCatalog();
+    await configureCatalogWebhooks(result);
 
     await sql`
       update webhook_events
