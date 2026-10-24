@@ -136,7 +136,7 @@ function App() {
         </header>
 
         <div className="relative grid flex-1 items-center gap-0 pb-8 pt-9 sm:pt-16 lg:grid-cols-1 lg:gap-12 lg:pt-10">
-          <div className="relative z-20 max-w-4xl">
+          <div className="relative z-20 max-w-4xl lg:-translate-y-[clamp(3rem,6vh,5rem)]">
             <p className="animate-reveal text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-smoke/70 [animation-delay:120ms]">
               Drop 01 / Now available
             </p>
