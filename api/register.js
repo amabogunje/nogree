@@ -1,25 +1,6 @@
-import { get, put } from '@vercel/blob';
+import { sql } from './lib/db.js';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const logPathname = 'registered-emails.log';
-
-async function readCurrentLog() {
-  const existingLog = await get(logPathname, {
-    access: 'private',
-    useCache: false,
-  });
-
-  if (!existingLog) {
-    return '';
-  }
-
-  if (!existingLog.stream) {
-    return '';
-  }
-
-  const response = new Response(existingLog.stream);
-  return response.text();
-}
 
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
@@ -35,15 +16,11 @@ export default async function handler(request, response) {
   }
 
   try {
-    const entry = `${new Date().toISOString()}\t${email}\n`;
-    const currentLog = await readCurrentLog();
-
-    await put(logPathname, `${currentLog}${entry}`, {
-      access: 'private',
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: 'text/plain; charset=utf-8',
-    });
+    await sql`
+      insert into email_subscribers (email)
+      values (${email})
+      on conflict (email) do nothing
+    `;
 
     response.status(200).json({
       ok: true,
