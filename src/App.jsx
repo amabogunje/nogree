@@ -162,6 +162,7 @@ function DropShop({ onExit }) {
   const [activeProductId, setActiveProductId] = useState(null);
   const [loadError, setLoadError] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
+  const [showVariantImage, setShowVariantImage] = useState(false);
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [stateCode, setStateCode] = useState('');
@@ -190,6 +191,7 @@ function DropShop({ onExit }) {
         setActiveProductId(firstProduct.id);
         setSelectedColor(firstVariant?.color || '');
         setSelectedSize(firstVariant?.size || '');
+        setShowVariantImage(false);
       } catch (error) {
         if (active) setLoadError(error.message || 'Could not load Drop 01.');
       }
@@ -231,6 +233,7 @@ function DropShop({ onExit }) {
     const nextSize = product.variants.find((variant) => variant.available && variant.color === color)?.size || '';
     setSelectedColor(color);
     setSelectedSize(nextSize);
+    setShowVariantImage(true);
     resetQuote();
   }
 
@@ -239,6 +242,7 @@ function DropShop({ onExit }) {
     setActiveProductId(nextProduct.id);
     setSelectedColor(firstVariant?.color || '');
     setSelectedSize(firstVariant?.size || '');
+    setShowVariantImage(false);
     setQuantity(1);
     resetQuote();
   }
@@ -347,7 +351,7 @@ function DropShop({ onExit }) {
           <div className="pointer-events-none absolute inset-0 opacity-20 grain mix-blend-multiply" />
           <p className="pointer-events-none absolute left-[5%] top-[7%] font-display text-[clamp(5rem,15vw,14rem)] leading-none text-ink/5">01</p>
           <img
-            src={selectedColorImage || product.imageUrl}
+            src={(showVariantImage ? selectedColorImage : product.imageUrl) || selectedColorImage}
             alt={`${product.heroTitle} in ${selectedColor}`}
             className="relative z-10 h-auto max-h-[72vh] w-full max-w-2xl object-contain mix-blend-multiply"
           />

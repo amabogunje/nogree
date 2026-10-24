@@ -13,6 +13,16 @@ function requestOptions(password, options = {}) {
   };
 }
 
+function normalizeProduct(product) {
+  return {
+    ...product,
+    variantImages: (product.variantImages || []).map((variant) => ({
+      ...variant,
+      imageUrl: variant.imageUrl ?? variant.curated_image_url ?? '',
+    })),
+  };
+}
+
 export default function CatalogAdmin({ onExit }) {
   const [password, setPassword] = useState(() => sessionStorage.getItem(passwordStorageKey) || '');
   const [products, setProducts] = useState([]);
@@ -31,7 +41,7 @@ export default function CatalogAdmin({ onExit }) {
       if (!response.ok) throw new Error(result.error || 'Could not open the catalog.');
 
       sessionStorage.setItem(passwordStorageKey, nextPassword);
-      setProducts(result.products);
+      setProducts(result.products.map(normalizeProduct));
       setStatus('ready');
     } catch (error) {
       sessionStorage.removeItem(passwordStorageKey);
@@ -48,6 +58,19 @@ export default function CatalogAdmin({ onExit }) {
     setProducts((current) => current.map((product) => (product.id === id ? { ...product, ...changes } : product)));
   }
 
+  function updateVariantImage(productId, color, imageUrl) {
+    setProducts((current) => current.map((product) => (
+      product.id === productId
+        ? {
+            ...product,
+            variantImages: product.variantImages.map((variant) => (
+              variant.color === color ? { ...variant, imageUrl } : variant
+            )),
+          }
+        : product
+    )));
+  }
+
   async function saveProduct(product) {
     setSavingId(product.id);
     setMessage('');
@@ -60,6 +83,10 @@ export default function CatalogAdmin({ onExit }) {
           heroImageUrl: product.hero_image_url || '',
           heroTitle: product.hero_title || '',
           selectorTitle: product.selector_title || '',
+          variantImages: product.variantImages.map((variant) => ({
+            color: variant.color,
+            imageUrl: variant.imageUrl || '',
+          })),
           displayOrder: Number(product.display_order),
         }),
       }));
@@ -67,7 +94,7 @@ export default function CatalogAdmin({ onExit }) {
 
       if (!response.ok) throw new Error(result.error || 'Could not save the product.');
 
-      updateProduct(product.id, result.product);
+      updateProduct(product.id, normalizeProduct(result.product));
       setMessage(`${result.product.name} saved.`);
     } catch (error) {
       setMessage(error.message || 'Could not save the product.');
@@ -186,6 +213,40 @@ export default function CatalogAdmin({ onExit }) {
                   >
                     Use Printful default
                   </button>
+
+                  <div className="mt-9 border-t border-ink/20 pt-7">
+                    <p className="text-[0.62rem] font-black uppercase tracking-[0.25em]">Color variant imagery</p>
+                    <div className="mt-5 space-y-5">
+                      {product.variantImages.map((variant) => {
+                        const variantUrl = variant.imageUrl || variant.printful_image_url;
+
+                        return (
+                          <div key={variant.color} className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-4">
+                            <div className="aspect-square overflow-hidden bg-ink/10">
+                              {variantUrl ? <img src={variantUrl} alt="" className="h-full w-full object-cover mix-blend-multiply" /> : null}
+                            </div>
+                            <div>
+                              <p className="text-[0.62rem] font-black uppercase tracking-[0.2em]">{variant.color}</p>
+                              <input
+                                type="url"
+                                value={variant.imageUrl || ''}
+                                onChange={(event) => updateVariantImage(product.id, variant.color, event.target.value)}
+                                placeholder={variant.printful_image_url || 'https://'}
+                                className="mt-2 h-11 w-full border border-ink/35 bg-transparent px-3 text-sm outline-none focus:border-ink"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => updateVariantImage(product.id, variant.color, '')}
+                                className="mt-2 text-[0.58rem] font-black uppercase tracking-[0.18em] underline underline-offset-4"
+                              >
+                                Use Printful default
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
 
                 </div>
                 <div className="lg:pt-8">

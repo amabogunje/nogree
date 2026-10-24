@@ -42,8 +42,34 @@ export default async function handler(request, response) {
         from products
         order by display_order asc, name asc
       `;
+      const variants = await sql`
+        select product_id, color, curated_image_url, image_url as printful_image_url
+        from product_variants
+        order by product_id, color, size
+      `;
+      const variantImagesByProduct = new Map();
 
-      response.status(200).json({ products });
+      for (const variant of variants) {
+        if (!variantImagesByProduct.has(variant.product_id)) {
+          variantImagesByProduct.set(variant.product_id, new Map());
+        }
+
+        const colors = variantImagesByProduct.get(variant.product_id);
+        if (!colors.has(variant.color)) {
+          colors.set(variant.color, {
+            color: variant.color,
+            curated_image_url: variant.curated_image_url,
+            printful_image_url: variant.printful_image_url,
+          });
+        }
+      }
+
+      response.status(200).json({
+        products: products.map((product) => ({
+          ...product,
+          variantImages: [...(variantImagesByProduct.get(product.id)?.values() || [])],
+        })),
+      });
     } catch {
       response.status(500).json({ error: 'Could not load the catalog.' });
     }
@@ -59,6 +85,7 @@ export default async function handler(request, response) {
   const heroImageUrl = cleanOptionalText(request.body?.heroImageUrl, 2000);
   const heroTitle = cleanOptionalText(request.body?.heroTitle, 120);
   const selectorTitle = cleanOptionalText(request.body?.selectorTitle, 80);
+  const variantImages = Array.isArray(request.body?.variantImages) ? request.body.variantImages : [];
   const displayOrder = Number(request.body?.displayOrder);
 
   if (!Number.isInteger(id) || !Number.isInteger(displayOrder) || displayOrder < 0 || displayOrder > 999) {
@@ -69,6 +96,24 @@ export default async function handler(request, response) {
   if (heroImageUrl && !/^https:\/\//i.test(heroImageUrl)) {
     response.status(400).json({ error: 'Hero image must use an HTTPS URL.' });
     return;
+  }
+
+  const cleanedVariantImages = [];
+  for (const variantImage of variantImages) {
+    const color = cleanOptionalText(variantImage?.color, 100);
+    const imageUrl = cleanOptionalText(variantImage?.imageUrl, 2000);
+
+    if (!color) {
+      response.status(400).json({ error: 'Variant color is required.' });
+      return;
+    }
+
+    if (imageUrl && !/^https:\/\//i.test(imageUrl)) {
+      response.status(400).json({ error: 'Variant image must use an HTTPS URL.' });
+      return;
+    }
+
+    cleanedVariantImages.push({ color, imageUrl });
   }
 
   try {
@@ -89,7 +134,23 @@ export default async function handler(request, response) {
       return;
     }
 
-    response.status(200).json({ product: rows[0] });
+    for (const variantImage of cleanedVariantImages) {
+      await sql`
+        update product_variants
+        set curated_image_url = ${variantImage.imageUrl}, updated_at = now()
+        where product_id = ${id} and color = ${variantImage.color}
+      `;
+    }
+
+    const variantRows = await sql`
+      select distinct on (color)
+        color, curated_image_url, image_url as printful_image_url
+      from product_variants
+      where product_id = ${id}
+      order by color, size
+    `;
+
+    response.status(200).json({ product: { ...rows[0], variantImages: variantRows } });
   } catch {
     response.status(500).json({ error: 'Could not save the product.' });
   }

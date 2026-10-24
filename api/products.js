@@ -23,7 +23,7 @@ export default async function handler(request, response) {
         product_variants.retail_price_cents,
         product_variants.currency,
         product_variants.available,
-        product_variants.image_url as variant_image_url
+        coalesce(product_variants.curated_image_url, product_variants.image_url) as variant_image_url
       from products
       join product_variants on product_variants.product_id = products.id
       where products.active = true
