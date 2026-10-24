@@ -57,6 +57,14 @@ function App() {
     setView('landing');
   }
 
+  function openCatalogAdmin() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('checkout');
+    url.hash = 'catalog-admin';
+    window.history.replaceState({}, '', url);
+    setView('catalog-admin');
+  }
+
   const checkoutState = new URLSearchParams(window.location.search).get('checkout');
 
   if (checkoutState === 'success' || checkoutState === 'cancelled') {
@@ -144,8 +152,15 @@ function App() {
           </aside>
         </div>
 
-        <footer className="hero-footer relative z-20 pb-2 text-center text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-bone mix-blend-difference sm:text-left sm:tracking-[0.28em]">
-          No gree for anybody.
+        <footer className="hero-footer relative z-20 flex items-center justify-between gap-4 pb-2 text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-bone mix-blend-difference sm:text-[0.68rem] sm:tracking-[0.28em]">
+          <span>No gree for anybody.</span>
+          <button
+            type="button"
+            onClick={openCatalogAdmin}
+            className="shrink-0 text-bone/70 transition hover:text-bone focus:outline-none focus-visible:text-bone focus-visible:underline focus-visible:underline-offset-4"
+          >
+            Catalog admin
+          </button>
         </footer>
       </section>
     </main>
