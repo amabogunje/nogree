@@ -43,13 +43,25 @@ function App() {
   }
 
   function openDrop() {
-    window.location.hash = 'drop-01';
+    const url = new URL(window.location.href);
+    url.searchParams.delete('checkout');
+    url.hash = 'drop-01';
+    window.history.replaceState({}, '', url);
     setView('drop');
   }
 
   function closeDrop() {
-    window.location.hash = '';
+    const url = new URL(window.location.href);
+    url.searchParams.delete('checkout');
+    url.hash = '';
+    window.history.replaceState({}, '', url);
     setView('landing');
+  }
+
+  const checkoutState = new URLSearchParams(window.location.search).get('checkout');
+
+  if (checkoutState === 'success' || checkoutState === 'cancelled') {
+    return <CheckoutReturn state={checkoutState} onContinue={checkoutState === 'success' ? openDrop : closeDrop} />;
   }
 
   if (view === 'drop') {
@@ -155,6 +167,35 @@ function App() {
         <footer className="relative z-20 pb-2 text-center text-xs font-black uppercase tracking-[0.5em] text-bone mix-blend-difference sm:text-left">
           First drop coming soon.
         </footer>
+      </section>
+    </main>
+  );
+}
+
+function CheckoutReturn({ state, onContinue }) {
+  const isSuccess = state === 'success';
+
+  return (
+    <main className="relative grid min-h-screen place-items-center overflow-hidden bg-bone px-6 text-ink">
+      <div className="pointer-events-none absolute inset-0 grain opacity-25 mix-blend-multiply" />
+      <section className="relative w-full max-w-2xl border-y border-ink py-12 text-center sm:py-16">
+        <p className="brand-mark">{wordmark}</p>
+        <p className="mt-12 text-[0.65rem] font-black uppercase tracking-[0.42em]">Drop 01</p>
+        <h1 className="logo-serif mt-5 text-5xl leading-none sm:text-7xl">
+          {isSuccess ? 'Order received.' : 'Selection held.'}
+        </h1>
+        <p className="mx-auto mt-7 max-w-md text-sm leading-7 text-ink/70">
+          {isSuccess
+            ? 'Your payment is confirmed. We are preparing your order for fulfillment.'
+            : 'No payment was taken. Your selection is waiting in Drop 01.'}
+        </p>
+        <button
+          type="button"
+          onClick={onContinue}
+          className="mt-11 min-h-14 border border-ink px-8 text-xs font-black uppercase tracking-[0.25em] transition hover:bg-ink hover:text-bone"
+        >
+          {isSuccess ? 'Return to Drop 01' : 'Return to selection'}
+        </button>
       </section>
     </main>
   );
