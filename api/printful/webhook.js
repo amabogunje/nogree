@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { sql } from '../lib/db.js';
 import { syncPrintfulCatalog } from '../lib/catalog-sync.js';
 import { configureCatalogWebhooks } from '../lib/printful-webhooks.js';
+import { sendShipmentNotification } from '../lib/email.js';
 
 const catalogEvents = new Set(['product_synced', 'product_updated', 'product_deleted', 'stock_updated']);
 
@@ -23,6 +24,71 @@ function eventId(event) {
   return crypto.createHash('sha256').update(JSON.stringify(event)).digest('hex');
 }
 
+function orderIdFromExternalId(externalId) {
+  const match = /^ng-(\d+)$/.exec(String(externalId || ''));
+  return match ? Number(match[1]) : null;
+}
+
+async function recordShipment(event) {
+  const shipment = event.data?.shipment;
+  const orderId = orderIdFromExternalId(event.data?.order?.external_id);
+
+  if (!shipment || !orderId) return;
+
+  const shipmentRows = await sql`
+    insert into order_shipments (
+      order_id,
+      printful_shipment_id,
+      carrier,
+      service,
+      tracking_number,
+      tracking_url,
+      shipment_status,
+      shipped_at,
+      delivered_at,
+      printful_payload
+    )
+    values (
+      ${orderId},
+      ${shipment.id || null},
+      ${shipment.carrier || null},
+      ${shipment.service || null},
+      ${shipment.tracking_number || null},
+      ${shipment.tracking_url || null},
+      ${shipment.status || 'shipped'},
+      ${shipment.shipped_at || null},
+      ${shipment.delivered_at || null},
+      ${JSON.stringify(event)}::jsonb
+    )
+    on conflict (order_id, printful_shipment_id) do update
+    set
+      carrier = excluded.carrier,
+      service = excluded.service,
+      tracking_number = excluded.tracking_number,
+      tracking_url = excluded.tracking_url,
+      shipment_status = excluded.shipment_status,
+      shipped_at = excluded.shipped_at,
+      delivered_at = excluded.delivered_at,
+      printful_payload = excluded.printful_payload,
+      updated_at = now()
+    returning id
+  `;
+
+  await sql`
+    update orders
+    set fulfillment_status = 'fulfilled', updated_at = now()
+    where id = ${orderId}
+  `;
+
+  await sendShipmentNotification({
+    orderId,
+    shipmentId: shipmentRows[0].id,
+    carrier: shipment.carrier,
+    trackingNumber: shipment.tracking_number,
+    trackingUrl: shipment.tracking_url,
+  });
+}
+
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
     response.status(405).json({ error: 'Method not allowed.' });
@@ -36,7 +102,7 @@ export default async function handler(request, response) {
 
   const event = request.body;
 
-  if (!event || typeof event !== 'object' || !catalogEvents.has(event.type)) {
+  if (!event || typeof event !== 'object' || (!catalogEvents.has(event.type) && event.type !== 'package_shipped')) {
     response.status(200).json({ received: true, ignored: true });
     return;
   }
@@ -57,8 +123,12 @@ export default async function handler(request, response) {
       return;
     }
 
-    const result = await syncPrintfulCatalog();
-    await configureCatalogWebhooks(result);
+    if (catalogEvents.has(event.type)) {
+      const result = await syncPrintfulCatalog();
+      await configureCatalogWebhooks(result);
+    } else {
+      await recordShipment(event);
+    }
 
     await sql`
       update webhook_events

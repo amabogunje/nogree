@@ -69,7 +69,7 @@ function localRegistrationApi() {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
-  for (const key of ['CATALOG_ADMIN_PASSWORD', 'DATABASE_URL', 'PRINTFUL_API_TOKEN', 'PRINTFUL_WEBHOOK_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET']) {
+  for (const key of ['CATALOG_ADMIN_PASSWORD', 'DATABASE_URL', 'PRINTFUL_API_TOKEN', 'PRINTFUL_WEBHOOK_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'RESEND_API_KEY', 'EMAIL_FROM', 'EMAIL_REPLY_TO']) {
     process.env[key] ||= env[key];
   }
 

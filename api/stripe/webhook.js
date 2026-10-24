@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { sql } from '../lib/db.js';
 import { printfulRequest } from '../lib/printful.js';
+import { sendOrderConfirmation } from '../lib/email.js';
 
 export const config = {
   api: {
@@ -147,6 +148,10 @@ export default async function handler(request, response) {
 
       if (session.payment_status === 'paid' || event.type === 'checkout.session.async_payment_succeeded') {
         await fulfillOrder(session);
+        const orderId = Number(session.metadata?.nogree_order_id);
+        if (Number.isInteger(orderId)) {
+          await sendOrderConfirmation(orderId);
+        }
       }
     }
 
