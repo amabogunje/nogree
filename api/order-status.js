@@ -9,6 +9,7 @@ function normalizeEmail(value) {
 }
 
 function customerStatus(order, shipments) {
+  if (order.payment_status === 'refunded') return 'Refunded';
   if (order.payment_status === 'failed') return 'Payment processing';
   if (order.fulfillment_status === 'failed' || order.fulfillment_status === 'cancelled') return 'Order received';
   if (shipments.length > 0) return 'Shipped';

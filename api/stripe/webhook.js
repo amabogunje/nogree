@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import { sql } from '../lib/db.js';
 import { printfulRequest } from '../lib/printful.js';
-import { sendFulfillmentAlert, sendOrderConfirmation } from '../lib/email.js';
+import { sendFulfillmentAlert, sendOrderConfirmation, sendRefundNotification } from '../lib/email.js';
 
 export const config = {
   api: {
@@ -169,6 +169,26 @@ export default async function handler(request, response) {
         set payment_status = 'failed', updated_at = now()
         where stripe_checkout_session_id = ${session.id}
       `;
+    }
+
+    if (event.type === 'charge.refunded') {
+      const charge = event.data.object;
+      const paymentIntentId = typeof charge.payment_intent === 'string' ? charge.payment_intent : null;
+      const isFullyRefunded = charge.refunded === true || charge.amount_refunded >= charge.amount;
+
+      if (paymentIntentId && isFullyRefunded) {
+        const refundedOrders = await sql`
+          update orders
+          set payment_status = 'refunded', updated_at = now()
+          where stripe_payment_intent_id = ${paymentIntentId}
+            and payment_status <> 'refunded'
+          returning id
+        `;
+
+        for (const order of refundedOrders) {
+          await sendRefundNotification(order.id);
+        }
+      }
     }
 
     await sql`

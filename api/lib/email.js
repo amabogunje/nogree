@@ -172,3 +172,28 @@ export async function sendShipmentNotification({ orderId, shipmentId, carrier, t
     }),
   });
 }
+
+export async function sendRefundNotification(orderId) {
+  const rows = await sql`
+    select customer_email, public_reference
+    from orders
+    where id = ${orderId}
+  `;
+  const order = rows[0];
+  if (!order?.customer_email) return { skipped: true };
+
+  return sendNotification({
+    orderId,
+    notificationKey: `refund-sent-${orderId}`,
+    notificationType: 'refund_sent',
+    recipientEmail: order.customer_email,
+    subject: `NO GREE / Order ${order.public_reference} refunded`,
+    html: emailShell({
+      eyebrow: `Order ${order.public_reference}`,
+      title: 'Your order has been refunded.',
+      body: '<p>Your payment has been returned to the original payment method. Your bank can take a few business days to show the refund.</p>',
+      actionLabel: 'View order status',
+      actionUrl: orderStatusUrl(order.public_reference),
+    }),
+  });
+}
