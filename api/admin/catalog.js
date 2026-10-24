@@ -40,6 +40,7 @@ export default async function handler(request, response) {
           display_order,
           active
         from products
+        where active = true
         order by display_order asc, name asc
       `;
       const variants = await sql`
