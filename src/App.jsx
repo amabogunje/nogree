@@ -61,7 +61,7 @@ function App() {
               </p>
             </div>
 
-            <div className="relative z-30 mt-12 flex w-full max-w-xl animate-reveal flex-col gap-3 [animation-delay:460ms] sm:flex-row">
+            <div className="relative z-30 mt-12 flex w-full max-w-xl animate-reveal flex-col gap-1 [animation-delay:460ms] sm:flex-row sm:gap-3">
               <button
                 type="button"
                 onClick={openDrop}
@@ -75,13 +75,16 @@ function App() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Follow no·gree on Instagram"
-                className="inline-flex min-h-16 items-center self-start px-3 text-ink/65 transition hover:text-ink sm:gap-2 sm:px-4"
+                className="inline-flex items-center self-start gap-2 px-2 py-2 text-ink/65 transition hover:text-ink sm:min-h-16 sm:px-4"
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.7">
                   <rect x="3" y="3" width="18" height="18" rx="5" />
                   <circle cx="12" cy="12" r="4" />
                   <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none" />
                 </svg>
+                <span className="text-[0.64rem] font-semibold uppercase tracking-[0.18em] underline decoration-ink/35 underline-offset-4 sm:hidden">
+                  Follow us
+                </span>
                 <span className="hidden text-[0.64rem] font-semibold uppercase tracking-[0.18em] underline decoration-ink/35 underline-offset-4 sm:inline">
                   Follow us on Instagram
                 </span>
