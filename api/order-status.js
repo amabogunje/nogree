@@ -49,7 +49,7 @@ export default async function handler(request, response) {
 
     const [items, shipments] = await Promise.all([
       sql`
-        select product_name, variant_label, quantity
+        select product_name, variant_label, quantity, product_variant_id
         from order_items
         where order_id = ${order.id}
         order by id asc
@@ -68,7 +68,12 @@ export default async function handler(request, response) {
         placedAt: order.created_at,
         refundedAt: order.refunded_at,
         status: customerStatus(order, shipments),
-        items,
+        items: items.map((item) => ({
+          productName: item.product_name,
+          variantLabel: item.variant_label,
+          quantity: item.quantity,
+          productVariantId: item.product_variant_id ? Number(item.product_variant_id) : null,
+        })),
         shipments,
       },
     });

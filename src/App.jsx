@@ -31,17 +31,44 @@ function colorSwatch(color) {
 function viewFromHash() {
   if (window.location.hash === '#catalog-admin') return 'catalog-admin';
   if (window.location.hash.startsWith('#order-status')) return 'order-status';
-  return window.location.hash === '#drop-01' ? 'drop' : 'landing';
+  return window.location.hash.startsWith('#drop-01') ? 'drop' : 'landing';
+}
+
+function selectionFromHash() {
+  const query = window.location.hash.split('?')[1];
+  if (!query) return null;
+
+  const params = new URLSearchParams(query);
+  const variantId = Number(params.get('variant'));
+  const quantity = Number(params.get('quantity'));
+
+  return Number.isInteger(variantId) && variantId > 0
+    ? { variantId, quantity: Number.isInteger(quantity) && quantity > 0 ? Math.min(quantity, 10) : 1 }
+    : null;
 }
 
 function App() {
   const [view, setView] = useState(viewFromHash);
+  const [reorderSelection, setReorderSelection] = useState(selectionFromHash);
 
   function openDrop() {
     const url = new URL(window.location.href);
     url.searchParams.delete('checkout');
     url.hash = 'drop-01';
     window.history.replaceState({}, '', url);
+    setReorderSelection(null);
+    setView('drop');
+  }
+
+  function openReorder(item) {
+    if (!Number.isInteger(item.productVariantId)) return;
+
+    const selection = { variantId: item.productVariantId, quantity: Math.min(item.quantity, 10) };
+    const url = new URL(window.location.href);
+    url.searchParams.delete('checkout');
+    url.hash = `drop-01?variant=${selection.variantId}&quantity=${selection.quantity}`;
+    window.history.replaceState({}, '', url);
+    setReorderSelection(selection);
     setView('drop');
   }
 
@@ -83,7 +110,7 @@ function App() {
   }
 
   if (view === 'drop') {
-    return <DropShop onExit={closeDrop} />;
+    return <DropShop onExit={closeDrop} reorderSelection={reorderSelection} />;
   }
 
   if (view === 'catalog-admin') {
@@ -91,7 +118,7 @@ function App() {
   }
 
   if (view === 'order-status') {
-    return <OrderStatus onExit={closeDrop} />;
+    return <OrderStatus onExit={closeDrop} onReorder={openReorder} />;
   }
 
   return (
@@ -99,10 +126,13 @@ function App() {
       <EditorialBackground />
 
       <section className="relative z-10 flex min-h-screen flex-col px-6 py-7 sm:px-10 lg:px-16">
-        <header className="flex items-center text-sm font-black uppercase tracking-[0.22em] sm:text-base">
+        <header className="flex items-center justify-between text-sm font-black uppercase tracking-[0.22em] sm:text-base">
           <a href="/" className="brand-mark inline-flex min-h-11 items-center tracking-normal sm:min-h-0" aria-label="no·gree home">
             {wordmark}
           </a>
+          <button type="button" onClick={openOrderStatus} className="min-h-11 text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-ink transition hover:underline hover:underline-offset-4 sm:text-[0.68rem]">
+            Order status
+          </button>
         </header>
 
         <div className="relative grid flex-1 items-center gap-0 pb-8 pt-9 sm:pt-16 lg:grid-cols-1 lg:gap-12 lg:pt-10">
@@ -169,22 +199,13 @@ function App() {
 
         <footer className="hero-footer relative z-20 flex items-center justify-between gap-4 pb-2 text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-bone mix-blend-difference sm:text-[0.68rem] sm:tracking-[0.28em]">
           <span>No gree for anybody.</span>
-          <span className="flex shrink-0 items-center gap-4 sm:gap-6">
-            <button
-              type="button"
-              onClick={openOrderStatus}
-              className="text-bone/70 transition hover:text-bone focus:outline-none focus-visible:text-bone focus-visible:underline focus-visible:underline-offset-4"
-            >
-              Order status
-            </button>
-            <button
-              type="button"
-              onClick={openCatalogAdmin}
-              className="text-bone/45 transition hover:text-bone focus:outline-none focus-visible:text-bone focus-visible:underline focus-visible:underline-offset-4"
-            >
-              Catalog admin
-            </button>
-          </span>
+          <button
+            type="button"
+            onClick={openCatalogAdmin}
+            className="shrink-0 text-bone/45 transition hover:text-bone focus:outline-none focus-visible:text-bone focus-visible:underline focus-visible:underline-offset-4"
+          >
+            Catalog admin
+          </button>
         </footer>
       </section>
     </main>
@@ -220,7 +241,7 @@ function CheckoutReturn({ state, onContinue }) {
   );
 }
 
-function OrderStatus({ onExit }) {
+function OrderStatus({ onExit, onReorder }) {
   const initialReference = new URLSearchParams(window.location.hash.split('?')[1] || '').get('order') || '';
   const [reference, setReference] = useState(initialReference);
   const [email, setEmail] = useState('');
@@ -286,7 +307,15 @@ function OrderStatus({ onExit }) {
               </div>
 
               <div className="mt-8 border-t border-ink/15 pt-6 text-sm leading-7 text-ink/70">
-                {order.items.map((item) => <p key={`${item.product_name}-${item.variant_label}`}>{item.quantity} × {item.product_name} / {item.variant_label}</p>)}
+                {order.items.map((item) => (
+                  <p key={`${item.productVariantId || item.productName}-${item.variantLabel}`}>
+                    {Number.isInteger(item.productVariantId) ? (
+                      <button type="button" onClick={() => onReorder(item)} className="text-left underline decoration-ink/40 underline-offset-4 transition hover:decoration-ink">
+                        {item.quantity} × {item.productName} / {item.variantLabel}
+                      </button>
+                    ) : `${item.quantity} × ${item.productName} / ${item.variantLabel}`}
+                  </p>
+                ))}
               </div>
 
               {order.shipments.length > 0 ? (
@@ -313,7 +342,7 @@ function OrderStatus({ onExit }) {
   );
 }
 
-function DropShop({ onExit }) {
+function DropShop({ onExit, reorderSelection }) {
   const [products, setProducts] = useState([]);
   const [activeProductId, setActiveProductId] = useState(null);
   const [loadError, setLoadError] = useState('');
@@ -344,13 +373,17 @@ function DropShop({ onExit }) {
 
         if (!active) return;
 
-        const firstProduct = result.products[0];
-        const firstVariant = firstProduct.variants.find((variant) => variant.available);
+        const requestedVariant = result.products
+          .flatMap((product) => product.variants.map((variant) => ({ product, variant })))
+          .find(({ variant }) => variant.available && variant.id === reorderSelection?.variantId);
+        const firstProduct = requestedVariant?.product || result.products[0];
+        const firstVariant = requestedVariant?.variant || firstProduct.variants.find((variant) => variant.available);
         setProducts(result.products);
         setActiveProductId(firstProduct.id);
         setSelectedColor(firstVariant?.color || '');
         setSelectedSize(firstVariant?.size || '');
-        setShowVariantImage(false);
+        setShowVariantImage(Boolean(requestedVariant));
+        setQuantity(requestedVariant ? reorderSelection.quantity : 1);
       } catch (error) {
         if (active) setLoadError(error.message || 'Could not load Drop 01.');
       }
@@ -360,7 +393,7 @@ function DropShop({ onExit }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [reorderSelection]);
 
   if (loadError) {
     return <DropNotice message={loadError} onExit={onExit} />;
