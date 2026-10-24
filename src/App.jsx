@@ -177,6 +177,9 @@ function DropShop({ onExit }) {
   const [showVariantImage, setShowVariantImage] = useState(false);
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [cart, setCart] = useState([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartMessage, setCartMessage] = useState('');
   const [stateCode, setStateCode] = useState('');
   const [zip, setZip] = useState('');
   const [quote, setQuote] = useState(null);
@@ -245,6 +248,57 @@ function DropShop({ onExit }) {
     setActionMessage('');
   }
 
+  function addToSelection() {
+    if (!selectedVariant) return;
+
+    const alreadySelected = cart.some((item) => item.variantId === selectedVariant.id);
+
+    if (!alreadySelected && cart.length >= 6) {
+      setCartMessage('A selection can hold up to six pieces.');
+      setCartOpen(true);
+      return;
+    }
+
+    setCart((current) => {
+      const existing = current.find((item) => item.variantId === selectedVariant.id);
+
+      if (existing) {
+        return current.map((item) => (
+          item.variantId === selectedVariant.id
+            ? { ...item, quantity: Math.min(10, item.quantity + quantity) }
+            : item
+        ));
+      }
+
+      return [...current, {
+        variantId: selectedVariant.id,
+        productName: product.heroTitle,
+        color: selectedColor,
+        size: selectedSize,
+        priceCents: selectedVariant.priceCents,
+        imageUrl: displayImage,
+        quantity,
+      }];
+    });
+
+    resetQuote();
+    setCartMessage(`${product.heroTitle} added to your selection.`);
+    setCartOpen(true);
+  }
+
+  function updateCartQuantity(variantId, nextQuantity) {
+    setCart((current) => current.flatMap((item) => {
+      if (item.variantId !== variantId) return [item];
+      return nextQuantity > 0 ? [{ ...item, quantity: Math.min(10, nextQuantity) }] : [];
+    }));
+    resetQuote();
+  }
+
+  function removeFromSelection(variantId) {
+    setCart((current) => current.filter((item) => item.variantId !== variantId));
+    resetQuote();
+  }
+
   function chooseColor(color) {
     const nextSize = product.variants.find((variant) => variant.available && variant.color === color)?.size || '';
     setSelectedColor(color);
@@ -264,7 +318,7 @@ function DropShop({ onExit }) {
   }
 
   async function calculateShipping() {
-    if (!selectedVariant) return;
+    if (cart.length === 0) return;
 
     setActionStatus('quoting');
     setActionMessage('');
@@ -274,7 +328,7 @@ function DropShop({ onExit }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: [{ variantId: selectedVariant.id, quantity }],
+          items: cart.map((item) => ({ variantId: item.variantId, quantity: item.quantity })),
           stateCode,
           zip,
         }),
@@ -292,7 +346,7 @@ function DropShop({ onExit }) {
   }
 
   async function startCheckout() {
-    if (!selectedVariant || !quote) return;
+    if (cart.length === 0 || !quote) return;
 
     setActionStatus('checking-out');
     setActionMessage('');
@@ -302,7 +356,7 @@ function DropShop({ onExit }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: [{ variantId: selectedVariant.id, quantity }],
+          items: cart.map((item) => ({ variantId: item.variantId, quantity: item.quantity })),
           stateCode,
           zip,
         }),
@@ -319,6 +373,8 @@ function DropShop({ onExit }) {
   }
 
   const itemTotal = selectedVariant ? selectedVariant.priceCents * quantity : 0;
+  const selectionTotal = cart.reduce((total, item) => total + item.priceCents * item.quantity, 0);
+  const selectionCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   return (
     <main className="min-h-screen bg-bone text-ink selection:bg-ink selection:text-bone">
@@ -328,9 +384,14 @@ function DropShop({ onExit }) {
           {wordmark}
         </button>
         <p className="hidden text-[0.68rem] font-semibold uppercase tracking-[0.24em] sm:block">Drop 01 / {String(products.length).padStart(2, '0')} pieces</p>
-        <button type="button" onClick={onExit} className="min-h-11 text-[0.68rem] font-semibold uppercase tracking-[0.2em] underline underline-offset-4">
-          Exit
-        </button>
+        <div className="flex items-center gap-5">
+          <button type="button" onClick={() => setCartOpen(true)} className="min-h-11 text-[0.68rem] font-semibold uppercase tracking-[0.18em] underline underline-offset-4">
+            Selection {String(selectionCount).padStart(2, '0')}
+          </button>
+          <button type="button" onClick={onExit} className="min-h-11 text-[0.68rem] font-semibold uppercase tracking-[0.2em] underline underline-offset-4">
+            Exit
+          </button>
+        </div>
       </header>
 
       <nav
@@ -427,73 +488,153 @@ function DropShop({ onExit }) {
                 U.S. delivery only
               </p>
             </div>
-
-            <p className="mt-8 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] sm:text-[0.65rem] sm:tracking-[0.24em]">Shipping estimate</p>
-            <form className="mt-4" onSubmit={(event) => { event.preventDefault(); calculateShipping(); }}>
-            <div className="grid grid-cols-[0.8fr_1.2fr] gap-2">
-              <input
-                value={stateCode}
-                onChange={(event) => { setStateCode(event.target.value.toUpperCase().slice(0, 2)); resetQuote(); }}
-                placeholder="State (e.g. NY)"
-                aria-label="U.S. state code"
-                autoComplete="address-level1"
-                className="h-12 min-w-0 border border-ink/35 bg-transparent px-4 text-sm font-black uppercase tracking-[0.16em] outline-none placeholder:text-ink/40 focus:border-ink"
-              />
-              <input
-                value={zip}
-                onChange={(event) => { setZip(event.target.value.slice(0, 10)); resetQuote(); }}
-                placeholder="ZIP code"
-                inputMode="numeric"
-                aria-label="ZIP code"
-                autoComplete="postal-code"
-                className="h-12 min-w-0 border border-ink/35 bg-transparent px-4 text-sm font-black tracking-[0.12em] outline-none placeholder:text-ink/40 focus:border-ink"
-              />
-            </div>
             <button
-              type="submit"
-              disabled={actionStatus !== 'idle'}
-              className="mt-2 h-12 w-full border border-ink bg-transparent text-xs font-black uppercase tracking-[0.24em] transition hover:bg-ink hover:text-bone disabled:cursor-wait disabled:opacity-60"
+              type="button"
+              onClick={addToSelection}
+              className="mt-8 min-h-14 w-full border border-ink bg-transparent px-6 text-xs font-black uppercase tracking-[0.24em] transition hover:bg-ink hover:text-bone"
             >
-              {actionStatus === 'quoting' ? 'Calculating...' : 'Calculate shipping'}
+              Add to selection
             </button>
-            </form>
           </div>
-
-          <div className="mt-6 border-y border-ink py-5">
-            <div className="flex justify-between text-xs font-black uppercase tracking-[0.2em]">
-              <span>Selection</span>
-              <span>${(itemTotal / 100).toFixed(2)}</span>
-            </div>
-            {quote ? (
-              <>
-                <div className="mt-3 flex justify-between text-xs font-black uppercase tracking-[0.14em] text-ink/65">
-                  <span>Shipping</span>
-                  <span>${(quote.shippingCents / 100).toFixed(2)}</span>
-                </div>
-                <div className="mt-2 flex justify-between text-xs font-black uppercase tracking-[0.2em]">
-                  <span>Total before tax</span>
-                  <span>${(quote.totalCents / 100).toFixed(2)}</span>
-                </div>
-                <p className="mt-4 text-[0.62rem] font-black uppercase leading-5 tracking-[0.14em] text-ink/55">
-                  {quote.shippingName} {quote.delivery?.minBusinessDays ? `• ${quote.delivery.minBusinessDays}-${quote.delivery.maxBusinessDays} business days after fulfillment` : ''}
-                </p>
-              </>
-            ) : null}
-          </div>
-
-          {!quote && !actionMessage ? <p className="mt-4 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-ink/55 sm:text-[0.62rem] sm:tracking-[0.13em]">Enter a U.S. state and ZIP to calculate delivery.</p> : null}
-          {actionMessage ? <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-red-800" role="status">{actionMessage}</p> : null}
-          <button
-            type="button"
-            disabled={!quote || actionStatus !== 'idle'}
-            onClick={startCheckout}
-            className="mt-6 min-h-16 w-full bg-ink px-6 text-xs font-black uppercase tracking-[0.28em] text-bone transition hover:bg-bone hover:text-ink hover:outline hover:outline-1 hover:outline-ink disabled:cursor-not-allowed disabled:opacity-35"
-          >
-            {actionStatus === 'checking-out' ? 'Opening checkout...' : 'Proceed to checkout'}
-          </button>
         </section>
       </section>
+      <SelectionDrawer
+        isOpen={cartOpen}
+        onClose={() => setCartOpen(false)}
+        cart={cart}
+        cartMessage={cartMessage}
+        onUpdateQuantity={updateCartQuantity}
+        onRemove={removeFromSelection}
+        stateCode={stateCode}
+        setStateCode={setStateCode}
+        zip={zip}
+        setZip={setZip}
+        quote={quote}
+        selectionTotal={selectionTotal}
+        actionStatus={actionStatus}
+        actionMessage={actionMessage}
+        onCalculateShipping={calculateShipping}
+        onCheckout={startCheckout}
+        onResetQuote={resetQuote}
+      />
     </main>
+  );
+}
+
+function SelectionDrawer({
+  isOpen,
+  onClose,
+  cart,
+  cartMessage,
+  onUpdateQuantity,
+  onRemove,
+  stateCode,
+  setStateCode,
+  zip,
+  setZip,
+  quote,
+  selectionTotal,
+  actionStatus,
+  actionMessage,
+  onCalculateShipping,
+  onCheckout,
+  onResetQuote,
+}) {
+  if (!isOpen) return null;
+
+  const pieceCount = cart.reduce((total, item) => total + item.quantity, 0);
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-ink/35" role="presentation">
+      <button type="button" className="absolute inset-0 cursor-default" onClick={onClose} aria-label="Close selection" />
+      <aside className="relative z-10 mt-auto max-h-[90dvh] w-full overflow-y-auto border-t border-ink bg-bone px-6 py-7 shadow-[-20px_0_60px_rgba(13,12,11,0.2)] sm:mt-0 sm:h-full sm:max-h-none sm:max-w-md sm:border-l sm:border-t-0 sm:px-8 sm:py-9" role="dialog" aria-modal="true" aria-label="Your selection">
+        <header className="flex items-start justify-between border-b border-ink/25 pb-6">
+          <div>
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-ink/55">Drop 01</p>
+            <h2 className="mt-3 logo-serif text-4xl leading-none">Selection.</h2>
+          </div>
+          <button type="button" onClick={onClose} className="min-h-11 text-[0.68rem] font-semibold uppercase tracking-[0.18em] underline underline-offset-4">Close</button>
+        </header>
+
+        {cart.length === 0 ? (
+          <div className="py-16 text-center">
+            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ink/55">Your selection is waiting.</p>
+            <button type="button" onClick={onClose} className="mt-8 min-h-12 border border-ink px-6 text-xs font-semibold uppercase tracking-[0.2em] transition hover:bg-ink hover:text-bone">Continue browsing</button>
+          </div>
+        ) : (
+          <>
+            <p className="mt-6 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-ink/55">{pieceCount} {pieceCount === 1 ? 'piece' : 'pieces'} selected</p>
+            {cartMessage ? <p className="sr-only" role="status">{cartMessage}</p> : null}
+
+            <div className="divide-y divide-ink/20">
+              {cart.map((item) => (
+                <article key={item.variantId} className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-4 py-6">
+                  <div className="aspect-square overflow-hidden bg-[#d9d0c0]">
+                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-contain mix-blend-multiply" /> : null}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="logo-serif text-2xl leading-none">{item.productName}</h3>
+                        <p className="mt-2 text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-ink/60">{item.color} / {item.size}</p>
+                      </div>
+                      <button type="button" onClick={() => onRemove(item.variantId)} className="min-h-11 text-[0.62rem] font-semibold uppercase tracking-[0.14em] underline underline-offset-4">Remove</button>
+                    </div>
+                    <div className="mt-5 flex items-center justify-between gap-4">
+                      <div className="flex h-11 border border-ink/35">
+                        <button type="button" onClick={() => onUpdateQuantity(item.variantId, item.quantity - 1)} className="h-11 w-11 text-lg transition hover:bg-ink hover:text-bone" aria-label={`Decrease ${item.productName} quantity`}>-</button>
+                        <output className="grid w-10 place-items-center border-x border-ink/35 text-sm font-semibold">{item.quantity}</output>
+                        <button type="button" onClick={() => onUpdateQuantity(item.variantId, item.quantity + 1)} className="h-11 w-11 text-lg transition hover:bg-ink hover:text-bone" aria-label={`Increase ${item.productName} quantity`}>+</button>
+                      </div>
+                      <p className="text-sm font-semibold">${((item.priceCents * item.quantity) / 100).toFixed(2)}</p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <div className="border-y border-ink py-5">
+              <div className="flex justify-between text-xs font-semibold uppercase tracking-[0.18em]">
+                <span>Selection</span>
+                <span>${(selectionTotal / 100).toFixed(2)}</span>
+              </div>
+              {quote ? (
+                <>
+                  <div className="mt-3 flex justify-between text-xs font-semibold uppercase tracking-[0.15em] text-ink/65">
+                    <span>Shipping</span>
+                    <span>${(quote.shippingCents / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="mt-3 flex justify-between text-xs font-semibold uppercase tracking-[0.18em]">
+                    <span>Total before tax</span>
+                    <span>${(quote.totalCents / 100).toFixed(2)}</span>
+                  </div>
+                  <p className="mt-4 text-[0.66rem] font-semibold uppercase leading-5 tracking-[0.12em] text-ink/55">
+                    {quote.shippingName} {quote.delivery?.minBusinessDays ? `• ${quote.delivery.minBusinessDays}-${quote.delivery.maxBusinessDays} business days after fulfillment` : ''}
+                  </p>
+                </>
+              ) : null}
+            </div>
+
+            <form className="mt-8" onSubmit={(event) => { event.preventDefault(); onCalculateShipping(); }}>
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em]">Shipping estimate</p>
+              <div className="mt-4 grid grid-cols-[0.9fr_1.1fr] gap-2">
+                <input value={stateCode} onChange={(event) => { setStateCode(event.target.value.toUpperCase().slice(0, 2)); onResetQuote(); }} placeholder="State (e.g. NY)" aria-label="U.S. state code" autoComplete="address-level1" className="h-12 min-w-0 border border-ink/35 bg-transparent px-3 text-sm font-semibold uppercase tracking-[0.12em] outline-none placeholder:text-ink/40 focus:border-ink" />
+                <input value={zip} onChange={(event) => { setZip(event.target.value.slice(0, 10)); onResetQuote(); }} placeholder="ZIP code" inputMode="numeric" aria-label="ZIP code" autoComplete="postal-code" className="h-12 min-w-0 border border-ink/35 bg-transparent px-3 text-sm font-semibold tracking-[0.1em] outline-none placeholder:text-ink/40 focus:border-ink" />
+              </div>
+              <button type="submit" disabled={actionStatus !== 'idle'} className="mt-2 h-12 w-full border border-ink bg-transparent text-xs font-semibold uppercase tracking-[0.2em] transition hover:bg-ink hover:text-bone disabled:cursor-wait disabled:opacity-60">
+                {actionStatus === 'quoting' ? 'Calculating...' : 'Calculate shipping'}
+              </button>
+            </form>
+
+            {!quote && !actionMessage ? <p className="mt-4 text-[0.66rem] font-semibold uppercase tracking-[0.1em] text-ink/55">Enter a U.S. state and ZIP to calculate delivery.</p> : null}
+            {actionMessage ? <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-red-800" role="status">{actionMessage}</p> : null}
+            <button type="button" disabled={!quote || actionStatus !== 'idle'} onClick={onCheckout} className="mt-6 min-h-16 w-full bg-ink px-6 text-xs font-black uppercase tracking-[0.25em] text-bone transition hover:bg-bone hover:text-ink hover:outline hover:outline-1 hover:outline-ink disabled:cursor-not-allowed disabled:opacity-35">
+              {actionStatus === 'checking-out' ? 'Opening checkout...' : 'Proceed to checkout'}
+            </button>
+          </>
+        )}
+      </aside>
+    </div>
   );
 }
 
