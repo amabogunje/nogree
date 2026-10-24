@@ -158,7 +158,7 @@ export default function CatalogAdmin({ onExit }) {
       <section className="mx-auto max-w-6xl py-12 sm:py-16">
         <div className="flex flex-col justify-between gap-6 border-b border-ink/25 pb-8 sm:flex-row sm:items-end">
           <div>
-            <h1 className="logo-serif text-5xl leading-none sm:text-7xl">Art direction.</h1>
+            <h1 className="logo-serif text-5xl leading-none sm:text-6xl">Art direction.</h1>
             <p className="mt-5 max-w-xl text-sm leading-7 text-ink/65">Printful controls the sellable variants. This room controls the image and titles customers encounter first.</p>
           </div>
           <p className="text-[0.65rem] font-black uppercase tracking-[0.25em] text-ink/55">{products.length} pieces</p>

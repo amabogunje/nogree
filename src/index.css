@@ -2,19 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bone: #e9dfce;
+  --bone-deep: #d9d0c0;
+  --ink: #0d0c0b;
+  --ink-muted: rgba(13, 12, 11, 0.62);
+  --rule: rgba(13, 12, 11, 0.25);
+  --transition: 180ms ease-out;
+}
+
 * {
   box-sizing: border-box;
 }
 
 html {
   min-width: 320px;
-  background: #e9dfce;
+  background: var(--bone);
 }
 
 body {
   margin: 0;
   min-width: 320px;
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: var(--ink);
+  font-family: 'DM Sans', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
 }
@@ -28,6 +38,19 @@ body {
 button,
 input {
   font: inherit;
+}
+
+button,
+a,
+input {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
 }
 
 .brand-mark {
@@ -49,7 +72,7 @@ input {
   background: currentColor;
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 240ms ease;
+  transition: transform var(--transition);
 }
 
 .brand-mark:hover::after {
@@ -63,7 +86,7 @@ input {
 .hero-word {
   font-family: Canela, 'IvyPresto Display', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   font-weight: 400;
-  letter-spacing: -0.07em;
+  letter-spacing: -0.055em;
   text-shadow:
     0.025em 0.03em 0 rgba(13, 12, 11, 0.06),
     -0.012em 0 0 rgba(233, 223, 206, 0.55);
@@ -71,7 +94,7 @@ input {
 
 .tagline {
   max-width: 48rem;
-  white-space: nowrap;
+  text-wrap: balance;
 }
 
 .oversize-type {
@@ -108,7 +131,7 @@ input {
   top: 14vh;
   width: min(32vw, 28rem);
   height: 50vh;
-  opacity: 0.14;
+  opacity: 0.07;
   transform: rotate(7deg);
   clip-path: polygon(18% 0, 100% 10%, 82% 100%, 0 88%);
   animation: drift 18s ease-in-out infinite;
@@ -119,7 +142,7 @@ input {
   bottom: 14vh;
   width: min(26vw, 21rem);
   height: 38vh;
-  opacity: 0.16;
+  display: none;
   transform: rotate(-9deg);
   clip-path: polygon(0 14%, 78% 0, 100% 100%, 16% 86%);
 }
@@ -129,7 +152,7 @@ input {
   top: 7vh;
   width: min(18vw, 14rem);
   height: 22vh;
-  opacity: 0.22;
+  display: none;
   transform: rotate(15deg);
   clip-path: polygon(13% 0, 100% 22%, 80% 100%, 0 68%);
 }
@@ -162,8 +185,8 @@ input {
   height: min(82vh, 57rem);
   object-fit: cover;
   object-position: 56% 50%;
-  filter: grayscale(0.86) contrast(1.1) brightness(0.84) sepia(0.08);
-  opacity: 0.86;
+  filter: grayscale(0.72) contrast(1.06) brightness(0.9) sepia(0.04);
+  opacity: 0.9;
   mix-blend-mode: multiply;
   transform: none;
   z-index: 1;
@@ -200,17 +223,6 @@ input {
   mask-composite: intersect;
 }
 
-.photo-wash::after {
-  content: 'FROM LAGOS';
-  position: absolute;
-  right: 8%;
-  bottom: 7%;
-  color: rgba(233, 223, 206, 0.5);
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.34em;
-}
-
 .tear-strip {
   position: absolute;
   left: 12%;
@@ -220,7 +232,7 @@ input {
     repeating-linear-gradient(90deg, rgba(233, 223, 206, 0.86) 0 16px, rgba(13, 12, 11, 0.22) 16px 18px),
     #e9dfce;
   mix-blend-mode: screen;
-  opacity: 0.08;
+  display: none;
   clip-path: polygon(0 34%, 8% 18%, 15% 48%, 27% 22%, 41% 44%, 55% 18%, 67% 38%, 82% 18%, 100% 38%, 100% 68%, 88% 54%, 76% 82%, 62% 58%, 49% 78%, 35% 56%, 20% 86%, 8% 57%, 0 80%);
 }
 
@@ -266,13 +278,8 @@ input {
       repeating-linear-gradient(90deg, rgba(233, 223, 206, 0.05) 0 1px, transparent 1px 7px);
   }
 
-  .shard-a {
-    right: -16vw;
-    opacity: 0.5;
-  }
-
   .tagline {
-    letter-spacing: 0.13em;
+    letter-spacing: 0.1em;
   }
 }
 
@@ -289,7 +296,7 @@ input {
   .tagline {
     font-size: clamp(0.78rem, 3.35vw, 0.98rem);
     line-height: 1.8;
-    letter-spacing: 0.09em;
+    letter-spacing: 0.075em;
   }
 
   .model-panel {
@@ -303,5 +310,16 @@ input {
 
   .oversize-type {
     font-size: 35vw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

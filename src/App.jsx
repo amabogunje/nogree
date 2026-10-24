@@ -4,6 +4,19 @@ import CatalogAdmin from './CatalogAdmin.jsx';
 const backgroundWords = ['NO GREE', 'LAGOS', 'DROP 01', 'NO EXCUSES'];
 const wordmark = 'no\u00b7gree';
 
+function colorSwatch(color) {
+  const swatches = {
+    black: '#11100f',
+    graphite: '#57524d',
+    'dark heather': '#605f5c',
+    'true navy': '#202838',
+    natural: '#d8c8ae',
+    white: '#f4f0e7',
+  };
+
+  return swatches[color.trim().toLowerCase()] || '#9b9284';
+}
+
 function App() {
   const [view, setView] = useState(() => {
     if (window.location.hash === '#catalog-admin') return 'catalog-admin';
@@ -60,16 +73,16 @@ function App() {
 
         <div className="relative grid flex-1 items-center gap-0 pb-8 pt-9 sm:pt-16 lg:grid-cols-1 lg:gap-12 lg:pt-10">
           <div className="relative z-20 max-w-4xl">
-            <p className="animate-reveal text-xs font-black uppercase tracking-[0.62em] text-smoke/70 [animation-delay:120ms]">
+            <p className="animate-reveal text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-smoke/70 [animation-delay:120ms]">
               Drop 01 / Now available
             </p>
 
-            <h1 className="hero-word mt-3 animate-reveal text-[clamp(4.5rem,16vw,13.5rem)] lowercase leading-[0.75] [animation-delay:220ms] sm:mt-5">
+            <h1 className="hero-word mt-4 animate-reveal text-[clamp(4.5rem,16vw,13.5rem)] lowercase leading-[0.8] [animation-delay:220ms] sm:mt-5">
               {wordmark}
             </h1>
 
             <div className="mt-7 max-w-3xl animate-reveal [animation-delay:340ms] sm:mt-12">
-              <p className="tagline text-balance text-xl font-black uppercase leading-[1.9] tracking-[0.34em] sm:text-2xl">
+              <p className="tagline text-balance text-lg font-semibold uppercase leading-[1.8] tracking-[0.18em] sm:text-xl">
                 Emotional language from Lagos
                 <br />
                 Worn with resistance.
@@ -120,7 +133,7 @@ function App() {
           </aside>
         </div>
 
-        <footer className="relative z-20 pb-2 text-center text-xs font-black uppercase tracking-[0.5em] text-bone mix-blend-difference sm:text-left">
+        <footer className="relative z-20 pb-2 text-center text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-bone mix-blend-difference sm:text-left">
           No gree for anybody.
         </footer>
       </section>
@@ -223,6 +236,10 @@ function DropShop({ onExit }) {
   const selectedColorImage = product.variants.find(
     (variant) => variant.available && variant.color === selectedColor,
   )?.imageUrl;
+  const productIndex = products.findIndex((item) => item.id === product.id) + 1;
+  const displayImage = product.hasCuratedHero && !showVariantImage
+    ? product.imageUrl
+    : selectedColorImage || product.imageUrl;
 
   function resetQuote() {
     setQuote(null);
@@ -306,12 +323,12 @@ function DropShop({ onExit }) {
 
   return (
     <main className="min-h-screen bg-bone text-ink selection:bg-ink selection:text-bone">
-      <header className="flex items-center justify-between border-b border-ink/25 px-6 py-6 sm:px-10 lg:px-16">
+      <header className="flex items-center justify-between border-b border-ink/25 px-6 py-5 sm:px-10 sm:py-6 lg:px-16">
         <button type="button" onClick={onExit} className="brand-mark" aria-label="Return to no·gree home">
           {wordmark}
         </button>
-        <p className="text-xs font-black uppercase tracking-[0.34em]">Drop 01 / {String(products.length).padStart(2, '0')} pieces</p>
-        <button type="button" onClick={onExit} className="text-xs font-black uppercase tracking-[0.24em] underline underline-offset-4">
+        <p className="hidden text-[0.68rem] font-semibold uppercase tracking-[0.24em] sm:block">Drop 01 / {String(products.length).padStart(2, '0')} pieces</p>
+        <button type="button" onClick={onExit} className="min-h-11 text-[0.68rem] font-semibold uppercase tracking-[0.2em] underline underline-offset-4">
           Exit
         </button>
       </header>
@@ -321,7 +338,6 @@ function DropShop({ onExit }) {
         aria-label="Drop 01 products"
       >
         {products.map((item, index) => {
-          const firstAvailableVariant = item.variants.find((variant) => variant.available);
           const isActive = item.id === product.id;
 
           return (
@@ -329,17 +345,14 @@ function DropShop({ onExit }) {
               key={item.id}
               type="button"
               onClick={() => chooseProduct(item)}
-              aria-current={isActive ? 'page' : undefined}
-              className={`group relative shrink-0 border-r border-ink/25 px-5 py-5 text-left transition first:border-l sm:min-w-52 sm:px-7 ${isActive ? 'bg-ink text-bone' : 'hover:bg-ink hover:text-bone'}`}
+              aria-pressed={isActive}
+              className={`group relative w-48 shrink-0 border-r border-ink/25 px-5 py-5 text-left transition first:border-l sm:w-56 sm:px-7 ${isActive ? 'bg-ink text-bone' : 'hover:bg-ink hover:text-bone'}`}
             >
-              <span className="block text-[0.56rem] font-black uppercase tracking-[0.28em] opacity-55">
+              <span className="block text-[0.56rem] font-semibold uppercase tracking-[0.24em] opacity-55">
                 {String(index + 1).padStart(2, '0')} / Drop 01
               </span>
-              <span className="mt-2 block text-xs font-black uppercase tracking-[0.15em]">
+              <span className="mt-2 block truncate text-xs font-semibold uppercase tracking-[0.13em]">
                 {item.selectorTitle}
-              </span>
-              <span className="mt-1 block text-[0.64rem] font-black tracking-[0.16em] opacity-60">
-                ${((firstAvailableVariant?.priceCents || 0) / 100).toFixed(2)}
               </span>
             </button>
           );
@@ -347,49 +360,52 @@ function DropShop({ onExit }) {
       </nav>
 
       <section className="grid min-h-[calc(100vh-10.8rem)] lg:grid-cols-[minmax(0,1.12fr)_minmax(25rem,0.88fr)]">
-        <div className="relative flex min-h-[54vh] items-center justify-center overflow-hidden bg-[#d9d0c0] px-7 py-14 sm:px-14 lg:min-h-0 lg:px-20">
+        <div className="relative flex min-h-[42vh] items-center justify-center overflow-hidden bg-[#d9d0c0] px-7 py-12 sm:min-h-[54vh] sm:px-14 sm:py-14 lg:min-h-0 lg:px-20">
           <div className="pointer-events-none absolute inset-0 opacity-20 grain mix-blend-multiply" />
-          <p className="pointer-events-none absolute left-[5%] top-[7%] font-display text-[clamp(5rem,15vw,14rem)] leading-none text-ink/5">01</p>
+          <p className="pointer-events-none absolute left-[5%] top-[7%] font-display text-[clamp(5rem,15vw,14rem)] leading-none text-ink/5">{String(productIndex).padStart(2, '0')}</p>
           <img
-            src={(showVariantImage ? selectedColorImage : product.imageUrl) || selectedColorImage}
+            src={displayImage}
             alt={`${product.heroTitle} in ${selectedColor}`}
             className="relative z-10 h-auto max-h-[72vh] w-full max-w-2xl object-contain mix-blend-multiply"
           />
-          <p className="absolute bottom-7 left-7 z-10 text-[0.62rem] font-black uppercase tracking-[0.34em] sm:bottom-10 sm:left-10">
+          <p className="absolute bottom-7 left-7 z-10 text-[0.62rem] font-semibold uppercase tracking-[0.25em] sm:bottom-10 sm:left-10">
             Emotional language from Lagos
           </p>
         </div>
 
         <section className="flex flex-col border-t border-ink/25 px-6 py-10 sm:px-10 lg:border-l lg:border-t-0 lg:px-14 lg:py-14">
           <div>
-            <p className="text-[0.66rem] font-black uppercase tracking-[0.4em] text-ink/55">{product.collection}</p>
-            <h1 className="mt-4 logo-serif text-5xl leading-none sm:text-6xl">{product.heroTitle}</h1>
-            <p className="mt-7 text-lg font-black tracking-[0.08em]">${(itemTotal / 100).toFixed(2)}</p>
+            <p className="text-[0.66rem] font-semibold uppercase tracking-[0.28em] text-ink/55">{product.collection}</p>
+            <h1 className="mt-4 max-w-xl text-balance logo-serif text-[clamp(2.8rem,7vw,4rem)] leading-[0.9]">{product.heroTitle}</h1>
+            <p className="mt-7 text-base font-semibold tracking-[0.06em]">${(itemTotal / 100).toFixed(2)}</p>
           </div>
 
           <div className="mt-10 border-t border-ink/25 pt-8">
-            <p className="text-[0.65rem] font-black uppercase tracking-[0.32em]">Color</p>
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.24em]">Color</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {colors.map((color) => (
                 <button
                   key={color}
                   type="button"
                   onClick={() => chooseColor(color)}
-                  className={`border px-4 py-3 text-xs font-black uppercase tracking-[0.18em] transition ${selectedColor === color ? 'border-ink bg-ink text-bone' : 'border-ink/35 hover:border-ink'}`}
+                  aria-pressed={selectedColor === color}
+                  className={`inline-flex min-h-12 items-center gap-2 border px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] transition ${selectedColor === color ? 'border-ink bg-ink text-bone' : 'border-ink/35 hover:border-ink'}`}
                 >
+                  <span className="h-3 w-3 rounded-full border border-current/30" style={{ backgroundColor: colorSwatch(color) }} />
                   {color}
                 </button>
               ))}
             </div>
 
-            <p className="mt-8 text-[0.65rem] font-black uppercase tracking-[0.32em]">Size</p>
+            <p className="mt-8 text-[0.65rem] font-semibold uppercase tracking-[0.24em]">Size</p>
             <div className="mt-4 grid grid-cols-4 gap-2">
               {sizes.map((size) => (
                 <button
                   key={size}
                   type="button"
                   onClick={() => { setSelectedSize(size); resetQuote(); }}
-                  className={`h-12 border text-xs font-black uppercase tracking-[0.16em] transition ${selectedSize === size ? 'border-ink bg-ink text-bone' : 'border-ink/35 hover:border-ink'}`}
+                  aria-pressed={selectedSize === size}
+                  className={`h-12 border text-xs font-semibold uppercase tracking-[0.14em] transition ${selectedSize === size ? 'border-ink bg-ink text-bone' : 'border-ink/35 hover:border-ink'}`}
                 >
                   {size}
                 </button>
@@ -400,7 +416,7 @@ function DropShop({ onExit }) {
           <div className="mt-10 border-t border-ink/25 pt-8">
             <div className="flex items-end justify-between gap-5">
               <div>
-                <p className="text-[0.65rem] font-black uppercase tracking-[0.32em]">Quantity</p>
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.24em]">Quantity</p>
                 <div className="mt-4 flex h-12 border border-ink/35">
                   <button type="button" onClick={() => { setQuantity(Math.max(1, quantity - 1)); resetQuote(); }} className="w-12 text-lg hover:bg-ink hover:text-bone" aria-label="Decrease quantity">-</button>
                   <output className="grid w-12 place-items-center border-x border-ink/35 text-sm font-black">{quantity}</output>
@@ -408,17 +424,19 @@ function DropShop({ onExit }) {
                 </div>
               </div>
               <p className="max-w-44 text-right text-[0.63rem] font-black uppercase leading-5 tracking-[0.18em] text-ink/55">
-                U.S. orders only
+                U.S. delivery only
               </p>
             </div>
 
-            <p className="mt-8 text-[0.65rem] font-black uppercase tracking-[0.32em]">Shipping estimate</p>
-            <div className="mt-4 grid grid-cols-[0.8fr_1.2fr] gap-2">
+            <p className="mt-8 text-[0.65rem] font-semibold uppercase tracking-[0.24em]">Shipping estimate</p>
+            <form className="mt-4" onSubmit={(event) => { event.preventDefault(); calculateShipping(); }}>
+            <div className="grid grid-cols-[0.8fr_1.2fr] gap-2">
               <input
                 value={stateCode}
                 onChange={(event) => { setStateCode(event.target.value.toUpperCase().slice(0, 2)); resetQuote(); }}
-                placeholder="State"
+                placeholder="State (NY)"
                 aria-label="U.S. state code"
+                autoComplete="address-level1"
                 className="h-12 min-w-0 border border-ink/35 bg-transparent px-4 text-sm font-black uppercase tracking-[0.16em] outline-none placeholder:text-ink/40 focus:border-ink"
               />
               <input
@@ -427,17 +445,18 @@ function DropShop({ onExit }) {
                 placeholder="ZIP code"
                 inputMode="numeric"
                 aria-label="ZIP code"
+                autoComplete="postal-code"
                 className="h-12 min-w-0 border border-ink/35 bg-transparent px-4 text-sm font-black tracking-[0.12em] outline-none placeholder:text-ink/40 focus:border-ink"
               />
             </div>
             <button
-              type="button"
-              onClick={calculateShipping}
+              type="submit"
               disabled={actionStatus !== 'idle'}
               className="mt-2 h-12 w-full border border-ink bg-transparent text-xs font-black uppercase tracking-[0.24em] transition hover:bg-ink hover:text-bone disabled:cursor-wait disabled:opacity-60"
             >
               {actionStatus === 'quoting' ? 'Calculating...' : 'Calculate shipping'}
             </button>
+            </form>
           </div>
 
           <div className="mt-6 border-y border-ink py-5">
@@ -462,7 +481,8 @@ function DropShop({ onExit }) {
             ) : null}
           </div>
 
-          {actionMessage ? <p className="mt-4 text-xs font-black uppercase tracking-[0.16em] text-red-800" role="status">{actionMessage}</p> : null}
+          {!quote && !actionMessage ? <p className="mt-4 text-[0.62rem] font-semibold uppercase tracking-[0.13em] text-ink/55">Enter a U.S. state and ZIP to calculate delivery.</p> : null}
+          {actionMessage ? <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-red-800" role="status">{actionMessage}</p> : null}
           <button
             type="button"
             disabled={!quote || actionStatus !== 'idle'}
