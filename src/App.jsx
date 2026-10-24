@@ -37,17 +37,10 @@ function App() {
       <EditorialBackground />
 
       <section className="relative z-10 flex min-h-screen flex-col px-6 py-7 sm:px-10 lg:px-16">
-        <header className="flex items-center justify-between text-sm font-black uppercase tracking-[0.22em] sm:text-base">
+        <header className="flex items-center text-sm font-black uppercase tracking-[0.22em] sm:text-base">
           <a href="/" className="brand-mark tracking-normal" aria-label="no·gree home">
             {wordmark}
           </a>
-          <button
-            type="button"
-            onClick={openDrop}
-            className="date-stamp border-b border-ink pb-1 text-xs transition hover:border-transparent sm:text-sm"
-          >
-            Shop Drop 01
-          </button>
         </header>
 
         <div className="relative grid flex-1 items-center gap-0 pb-8 pt-16 lg:grid-cols-1 lg:gap-12 lg:pt-10">
@@ -66,10 +59,6 @@ function App() {
                 <br />
                 Worn with resistance.
               </p>
-
-              <p className="mt-10 max-w-sm text-sm font-medium leading-7 text-ink/70 sm:text-base">
-                Garment-dyed heavyweight cotton. Made to be worn outside the lines.
-              </p>
             </div>
 
             <div className="relative z-30 mt-12 flex w-full max-w-xl animate-reveal flex-col gap-3 [animation-delay:460ms] sm:flex-row">
@@ -85,9 +74,9 @@ function App() {
                 href="https://www.instagram.com/no.gree.for.anybody/"
                 target="_blank"
                 rel="noreferrer"
-                className="grid min-h-16 place-items-center border border-ink/55 px-7 text-xs font-black uppercase tracking-[0.23em] text-ink transition hover:bg-ink hover:text-bone sm:min-w-52"
+                className="inline-flex min-h-16 items-center self-start px-2 text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-ink/65 underline decoration-ink/35 underline-offset-4 transition hover:text-ink hover:decoration-ink sm:px-4"
               >
-                Follow the language
+                Follow us on Instagram
               </a>
             </div>
           </div>
