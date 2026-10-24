@@ -136,7 +136,7 @@ export default async function handler(request, response) {
       where provider = 'printful' and provider_event_id = ${id}
     `;
 
-    response.status(200).json({ received: true, products: result.products.length });
+    response.status(200).json({ received: true });
   } catch {
     response.status(500).json({ error: 'Could not synchronize the Printful catalog.' });
   }

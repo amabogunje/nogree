@@ -3,6 +3,11 @@ import { sql } from './db.js';
 
 const emailFrom = process.env.EMAIL_FROM || 'NO GREE <orders@wearnogree.com>';
 const emailReplyTo = process.env.EMAIL_REPLY_TO;
+const storefrontUrl = process.env.STOREFRONT_URL || 'https://wearnogree.com';
+
+function orderStatusUrl(reference) {
+  return `${storefrontUrl}/#order-status?order=${encodeURIComponent(reference)}`;
+}
 
 function money(cents) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
@@ -76,6 +81,7 @@ export async function sendOrderConfirmation(orderId) {
   const rows = await sql`
     select
       orders.id,
+      orders.public_reference,
       orders.customer_email,
       orders.total_cents,
       orders.fulfillment_status,
@@ -99,19 +105,21 @@ export async function sendOrderConfirmation(orderId) {
     notificationKey: `order-confirmed-${orderId}`,
     notificationType: 'order_confirmed',
     recipientEmail: order.customer_email,
-    subject: `NO GREE / Order NG-${orderId} received`,
+    subject: `NO GREE / Order ${order.public_reference} received`,
     html: emailShell({
-      eyebrow: `Order NG-${orderId}`,
+      eyebrow: `Order ${order.public_reference}`,
       title: 'Your selection is confirmed.',
-      body: '<p>Payment received. Your pieces are now moving into production.</p><p>We will send tracking as soon as your order leaves the facility.</p>',
+      body: '<p>Payment received. Your pieces are now moving into production.</p><p>Your order number is below. You can check its status at any time, even before it ships.</p>',
       detail: `<strong>Selection</strong><br />${items}<br /><br /><strong>Total</strong> — ${money(order.total_cents)}`,
+      actionLabel: 'Check order status',
+      actionUrl: orderStatusUrl(order.public_reference),
     }),
   });
 }
 
 export async function sendShipmentNotification({ orderId, shipmentId, carrier, trackingNumber, trackingUrl }) {
   const rows = await sql`
-    select customer_email
+    select customer_email, public_reference
     from orders
     where id = ${orderId}
   `;
@@ -124,9 +132,9 @@ export async function sendShipmentNotification({ orderId, shipmentId, carrier, t
     notificationKey: `shipment-sent-${shipmentId}`,
     notificationType: 'shipment_sent',
     recipientEmail,
-    subject: `NO GREE / Order NG-${orderId} is on the way`,
+    subject: `NO GREE / Order ${order.public_reference} is on the way`,
     html: emailShell({
-      eyebrow: `Order NG-${orderId}`,
+      eyebrow: `Order ${order.public_reference}`,
       title: 'Your pieces are on the way.',
       body: '<p>Your order has left the facility. Tracking can take up to a day to show movement after the carrier receives the package.</p>',
       detail: `<strong>${carrier || 'Shipment'} tracking</strong><br />${trackingNumber || 'Tracking information is updating.'}`,

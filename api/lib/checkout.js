@@ -1,8 +1,13 @@
 import Stripe from 'stripe';
+import { randomBytes } from 'node:crypto';
 import { sql } from './db.js';
 import { printfulRequest } from './printful.js';
 
 const shippingMarkup = 1.2;
+
+function createOrderReference() {
+  return `NG-${randomBytes(5).toString('hex').toUpperCase()}`;
+}
 
 function toCents(amount) {
   return Math.ceil(Number(amount) * 100);
@@ -130,7 +135,8 @@ export async function createCheckoutSession(selection, origin) {
       shipping_cents,
       total_cents,
       shipping_address,
-      printful_shipping_method
+      printful_shipping_method,
+      public_reference
     )
     values (
       'USD',
@@ -138,7 +144,8 @@ export async function createCheckoutSession(selection, origin) {
       ${selection.shipping.chargedCents},
       ${selection.totalCents},
       ${JSON.stringify(selection.address)}::jsonb,
-      ${selection.shipping.method}
+      ${selection.shipping.method},
+      ${createOrderReference()}
     )
     returning id
   `;

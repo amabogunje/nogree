@@ -28,11 +28,14 @@ function colorSwatch(color) {
   return swatches[color.trim().toLowerCase()] || '#9b9284';
 }
 
+function viewFromHash() {
+  if (window.location.hash === '#catalog-admin') return 'catalog-admin';
+  if (window.location.hash.startsWith('#order-status')) return 'order-status';
+  return window.location.hash === '#drop-01' ? 'drop' : 'landing';
+}
+
 function App() {
-  const [view, setView] = useState(() => {
-    if (window.location.hash === '#catalog-admin') return 'catalog-admin';
-    return window.location.hash === '#drop-01' ? 'drop' : 'landing';
-  });
+  const [view, setView] = useState(viewFromHash);
 
   function openDrop() {
     const url = new URL(window.location.href);
@@ -65,6 +68,14 @@ function App() {
     setView('catalog-admin');
   }
 
+  function openOrderStatus() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('checkout');
+    url.hash = 'order-status';
+    window.history.replaceState({}, '', url);
+    setView('order-status');
+  }
+
   const checkoutState = new URLSearchParams(window.location.search).get('checkout');
 
   if (checkoutState === 'success' || checkoutState === 'cancelled') {
@@ -77,6 +88,10 @@ function App() {
 
   if (view === 'catalog-admin') {
     return <CatalogAdmin onExit={closeCatalogAdmin} />;
+  }
+
+  if (view === 'order-status') {
+    return <OrderStatus onExit={closeDrop} />;
   }
 
   return (
@@ -154,13 +169,22 @@ function App() {
 
         <footer className="hero-footer relative z-20 flex items-center justify-between gap-4 pb-2 text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-bone mix-blend-difference sm:text-[0.68rem] sm:tracking-[0.28em]">
           <span>No gree for anybody.</span>
-          <button
-            type="button"
-            onClick={openCatalogAdmin}
-            className="shrink-0 text-bone/70 transition hover:text-bone focus:outline-none focus-visible:text-bone focus-visible:underline focus-visible:underline-offset-4"
-          >
-            Catalog admin
-          </button>
+          <span className="flex shrink-0 items-center gap-4 sm:gap-6">
+            <button
+              type="button"
+              onClick={openOrderStatus}
+              className="text-bone/70 transition hover:text-bone focus:outline-none focus-visible:text-bone focus-visible:underline focus-visible:underline-offset-4"
+            >
+              Order status
+            </button>
+            <button
+              type="button"
+              onClick={openCatalogAdmin}
+              className="text-bone/45 transition hover:text-bone focus:outline-none focus-visible:text-bone focus-visible:underline focus-visible:underline-offset-4"
+            >
+              Catalog admin
+            </button>
+          </span>
         </footer>
       </section>
     </main>
@@ -181,7 +205,7 @@ function CheckoutReturn({ state, onContinue }) {
         </h1>
         <p className="mx-auto mt-7 max-w-md text-sm leading-7 text-ink/70">
           {isSuccess
-            ? 'Your payment is confirmed. We are preparing your order for fulfillment.'
+            ? 'Your payment is confirmed. Your NO GREE order number and status link are in your email.'
             : 'No payment was taken. Your selection is waiting in Drop 01.'}
         </p>
         <button
@@ -191,6 +215,90 @@ function CheckoutReturn({ state, onContinue }) {
         >
           {isSuccess ? 'Return to Drop 01' : 'Return to selection'}
         </button>
+      </section>
+    </main>
+  );
+}
+
+function OrderStatus({ onExit }) {
+  const initialReference = new URLSearchParams(window.location.hash.split('?')[1] || '').get('order') || '';
+  const [reference, setReference] = useState(initialReference);
+  const [email, setEmail] = useState('');
+  const [order, setOrder] = useState(null);
+  const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function lookupOrder(event) {
+    event.preventDefault();
+    setIsLoading(true);
+    setMessage('');
+    setOrder(null);
+
+    try {
+      const response = await fetch('/api/order-status', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ reference, email }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not find that order.');
+      setOrder(result.order);
+    } catch (error) {
+      setMessage(error.message || 'Could not retrieve that order.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <main className="relative min-h-screen overflow-hidden bg-bone px-6 py-7 text-ink sm:px-10 sm:py-10">
+      <div className="pointer-events-none absolute inset-0 grain opacity-25 mix-blend-multiply" />
+      <section className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-3xl flex-col">
+        <header className="flex items-center justify-between text-sm font-black uppercase tracking-[0.22em] sm:text-base">
+          <button type="button" onClick={onExit} className="brand-mark min-h-11 tracking-normal" aria-label="Return to no·gree home">{wordmark}</button>
+          <button type="button" onClick={onExit} className="min-h-11 text-[0.65rem] font-semibold uppercase tracking-[0.2em] underline underline-offset-4">Return</button>
+        </header>
+
+        <div className="my-auto py-16 sm:py-24">
+          <p className="text-[0.66rem] font-black uppercase tracking-[0.32em] text-ink/55">Order status</p>
+          <h1 className="logo-serif mt-4 text-5xl leading-none sm:text-7xl">Find your order.</h1>
+          <p className="mt-6 max-w-lg text-sm leading-7 text-ink/65">Use the NO GREE order number from your confirmation email and the email used at checkout.</p>
+
+          <form onSubmit={lookupOrder} className="mt-10 grid max-w-xl gap-3 sm:grid-cols-[1fr_1fr_auto]">
+            <input value={reference} onChange={(event) => setReference(event.target.value.toUpperCase())} placeholder="Order number" aria-label="Order number" autoCapitalize="characters" className="h-14 min-w-0 border border-ink/35 bg-transparent px-4 text-sm font-semibold uppercase tracking-[0.12em] outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-ink/40 focus:border-ink" />
+            <input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email address" aria-label="Email address" type="email" autoComplete="email" className="h-14 min-w-0 border border-ink/35 bg-transparent px-4 text-sm outline-none placeholder:text-ink/40 focus:border-ink" />
+            <button type="submit" disabled={isLoading} className="h-14 bg-ink px-6 text-[0.65rem] font-black uppercase tracking-[0.2em] text-bone transition hover:bg-bone hover:text-ink hover:outline hover:outline-1 hover:outline-ink disabled:cursor-wait disabled:opacity-60">{isLoading ? 'Checking' : 'Check'}</button>
+          </form>
+
+          {message ? <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-red-800" role="status">{message}</p> : null}
+
+          {order ? (
+            <section className="mt-12 max-w-xl border-y border-ink py-7 sm:py-9" aria-live="polite">
+              <div className="flex items-start justify-between gap-6">
+                <div>
+                  <p className="text-[0.62rem] font-black uppercase tracking-[0.26em] text-ink/55">{order.reference}</p>
+                  <h2 className="logo-serif mt-3 text-3xl leading-none sm:text-4xl">{order.status}</h2>
+                </div>
+                <p className="pt-1 text-right text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/55">Placed<br />{new Date(order.placedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+              </div>
+
+              <div className="mt-8 border-t border-ink/15 pt-6 text-sm leading-7 text-ink/70">
+                {order.items.map((item) => <p key={`${item.product_name}-${item.variant_label}`}>{item.quantity} × {item.product_name} / {item.variant_label}</p>)}
+              </div>
+
+              {order.shipments.length > 0 ? (
+                <div className="mt-7 space-y-5 border-t border-ink/15 pt-6">
+                  {order.shipments.map((shipment, index) => (
+                    <div key={`${shipment.tracking_number || 'shipment'}-${index}`}>
+                      <p className="text-[0.62rem] font-black uppercase tracking-[0.22em] text-ink/55">{shipment.carrier || 'Shipment'} {shipment.service ? `/ ${shipment.service}` : ''}</p>
+                      {shipment.tracking_url ? <a href={shipment.tracking_url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm font-semibold underline underline-offset-4">Track package</a> : <p className="mt-2 text-sm text-ink/70">Tracking is updating.</p>}
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="mt-7 border-t border-ink/15 pt-6 text-sm leading-7 text-ink/65">Your pieces are being prepared. Carrier tracking will appear here once the package leaves the facility.</p>}
+            </section>
+          ) : null}
+        </div>
       </section>
     </main>
   );
