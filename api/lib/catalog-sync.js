@@ -53,11 +53,9 @@ export async function syncPrintfulCatalog() {
       on conflict (printful_sync_product_id) do update
       set
         name = excluded.name,
-        description = excluded.description,
         printful_store_id = excluded.printful_store_id,
         image_url = excluded.image_url,
         active = excluded.active,
-        display_order = excluded.display_order,
         updated_at = now()
       returning id
     `;

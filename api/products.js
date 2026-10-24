@@ -14,7 +14,7 @@ export default async function handler(request, response) {
         products.name,
         products.collection,
         products.description,
-        products.image_url as product_image_url,
+        coalesce(products.hero_image_url, products.image_url) as product_image_url,
         products.display_order,
         product_variants.id as variant_id,
         product_variants.color,

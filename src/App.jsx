@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
+import CatalogAdmin from './CatalogAdmin.jsx';
 
 const backgroundWords = ['NO GREE', 'LAGOS', 'DROP 01', 'NO EXCUSES'];
 const wordmark = 'no\u00b7gree';
 
 function App() {
-  const [view, setView] = useState(() => window.location.hash === '#drop-01' ? 'drop' : 'landing');
+  const [view, setView] = useState(() => {
+    if (window.location.hash === '#catalog-admin') return 'catalog-admin';
+    return window.location.hash === '#drop-01' ? 'drop' : 'landing';
+  });
 
   function openDrop() {
     const url = new URL(window.location.href);
@@ -22,6 +26,13 @@ function App() {
     setView('landing');
   }
 
+  function closeCatalogAdmin() {
+    const url = new URL(window.location.href);
+    url.hash = '';
+    window.history.replaceState({}, '', url);
+    setView('landing');
+  }
+
   const checkoutState = new URLSearchParams(window.location.search).get('checkout');
 
   if (checkoutState === 'success' || checkoutState === 'cancelled') {
@@ -30,6 +41,10 @@ function App() {
 
   if (view === 'drop') {
     return <DropShop onExit={closeDrop} />;
+  }
+
+  if (view === 'catalog-admin') {
+    return <CatalogAdmin onExit={closeCatalogAdmin} />;
   }
 
   return (

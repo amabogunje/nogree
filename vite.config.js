@@ -12,11 +12,13 @@ function localRegistrationApi() {
         '/products': 'api/products.js',
         '/shipping-quote': 'api/shipping-quote.js',
         '/checkout': 'api/checkout.js',
+        '/admin/catalog': 'api/admin/catalog.js',
         '/printful/webhook': 'api/printful/webhook.js',
       };
 
       server.middlewares.use('/api', async (req, res, next) => {
-        const modulePath = routes[req.url?.split('?')[0]];
+        const requestUrl = new URL(req.url || '/', 'http://localhost');
+        const modulePath = routes[requestUrl.pathname];
 
         if (!modulePath) {
           next();
@@ -35,7 +37,12 @@ function localRegistrationApi() {
             const { default: handler } = await import(handlerUrl);
 
             await handler(
-              { method: req.method, body: payload },
+              {
+                method: req.method,
+                body: payload,
+                headers: req.headers,
+                query: Object.fromEntries(requestUrl.searchParams),
+              },
               {
                 status(code) {
                   res.statusCode = code;
@@ -62,7 +69,7 @@ function localRegistrationApi() {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
-  for (const key of ['DATABASE_URL', 'PRINTFUL_API_TOKEN', 'PRINTFUL_WEBHOOK_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET']) {
+  for (const key of ['CATALOG_ADMIN_PASSWORD', 'DATABASE_URL', 'PRINTFUL_API_TOKEN', 'PRINTFUL_WEBHOOK_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET']) {
     process.env[key] ||= env[key];
   }
 
