@@ -2,9 +2,10 @@ import crypto from 'node:crypto';
 import { sql } from '../lib/db.js';
 import { syncPrintfulCatalog } from '../lib/catalog-sync.js';
 import { configureCatalogWebhooks } from '../lib/printful-webhooks.js';
-import { sendShipmentNotification } from '../lib/email.js';
+import { sendFulfillmentAlert, sendShipmentNotification } from '../lib/email.js';
 
 const catalogEvents = new Set(['product_synced', 'product_updated', 'product_deleted', 'stock_updated']);
+const orderEvents = new Set(['order_updated', 'order_failed', 'order_canceled']);
 
 function hasValidSecret(request) {
   const expected = process.env.PRINTFUL_WEBHOOK_SECRET;
@@ -89,6 +90,43 @@ async function recordShipment(event) {
   });
 }
 
+function fulfillmentStatus(printfulStatus) {
+  const statuses = {
+    canceled: 'cancelled',
+    failed: 'failed',
+    fulfilled: 'fulfilled',
+    inprocess: 'in_progress',
+    partial: 'fulfilled',
+    pending: 'submitted',
+  };
+
+  return statuses[printfulStatus] || 'submitted';
+}
+
+async function recordOrderStatus(event) {
+  const printfulOrder = event.data?.order;
+  const orderId = orderIdFromExternalId(printfulOrder?.external_id);
+  if (!printfulOrder || !orderId) return;
+
+  const status = fulfillmentStatus(printfulOrder.status);
+  await sql`
+    update orders
+    set
+      printful_order_id = coalesce(${printfulOrder.id || null}, printful_order_id),
+      fulfillment_status = ${status},
+      updated_at = now()
+    where id = ${orderId}
+  `;
+
+  if (status === 'failed' || status === 'cancelled') {
+    await sendFulfillmentAlert({
+      orderId,
+      reason: event.data?.reason || `Printful marked the order as ${printfulOrder.status}.`,
+      printfulOrderUrl: printfulOrder.dashboard_url,
+    });
+  }
+}
+
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
     response.status(405).json({ error: 'Method not allowed.' });
@@ -102,7 +140,7 @@ export default async function handler(request, response) {
 
   const event = request.body;
 
-  if (!event || typeof event !== 'object' || (!catalogEvents.has(event.type) && event.type !== 'package_shipped')) {
+  if (!event || typeof event !== 'object' || (!catalogEvents.has(event.type) && !orderEvents.has(event.type) && event.type !== 'package_shipped')) {
     response.status(200).json({ received: true, ignored: true });
     return;
   }
@@ -126,6 +164,8 @@ export default async function handler(request, response) {
     if (catalogEvents.has(event.type)) {
       const result = await syncPrintfulCatalog();
       await configureCatalogWebhooks(result);
+    } else if (orderEvents.has(event.type)) {
+      await recordOrderStatus(event);
     } else {
       await recordShipment(event);
     }

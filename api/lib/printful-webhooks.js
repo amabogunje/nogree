@@ -1,6 +1,15 @@
 import { printfulRequest } from './printful.js';
 
-const webhookTypes = ['product_synced', 'product_updated', 'product_deleted', 'stock_updated', 'package_shipped'];
+const webhookTypes = [
+  'product_synced',
+  'product_updated',
+  'product_deleted',
+  'stock_updated',
+  'package_shipped',
+  'order_updated',
+  'order_failed',
+  'order_canceled',
+];
 const publicSiteUrl = 'https://wearnogree.com';
 
 export async function configureCatalogWebhooks({ storeId, catalogProductIds }) {

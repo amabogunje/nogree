@@ -3,6 +3,7 @@ import { sql } from './db.js';
 
 const emailFrom = process.env.EMAIL_FROM || 'NO GREE <orders@wearnogree.com>';
 const emailReplyTo = process.env.EMAIL_REPLY_TO;
+const orderAlertEmail = process.env.ORDER_ALERT_EMAIL || emailReplyTo;
 const storefrontUrl = process.env.STOREFRONT_URL || 'https://wearnogree.com';
 
 function orderStatusUrl(reference) {
@@ -96,7 +97,7 @@ export async function sendOrderConfirmation(orderId) {
   `;
 
   const order = rows[0];
-  if (!order?.customer_email || order.fulfillment_status === 'failed') return { skipped: true };
+  if (!order?.customer_email) return { skipped: true };
 
   const items = rows.map((item) => `${item.quantity} × ${item.product_name} / ${item.variant_label} — ${money(item.unit_price_cents * item.quantity)}`).join('<br />');
 
@@ -108,11 +109,39 @@ export async function sendOrderConfirmation(orderId) {
     subject: `NO GREE / Order ${order.public_reference} received`,
     html: emailShell({
       eyebrow: `Order ${order.public_reference}`,
-      title: 'Your selection is confirmed.',
-      body: '<p>Payment received. Your pieces are now moving into production.</p><p>Your order number is below. You can check its status at any time, even before it ships.</p>',
+      title: 'Your order is received.',
+      body: '<p>Payment received. We are preparing your pieces for fulfillment.</p><p>Your order number is below. You can check its status at any time, even before it ships.</p>',
       detail: `<strong>Selection</strong><br />${items}<br /><br /><strong>Total</strong> — ${money(order.total_cents)}`,
       actionLabel: 'Check order status',
       actionUrl: orderStatusUrl(order.public_reference),
+    }),
+  });
+}
+
+export async function sendFulfillmentAlert({ orderId, reason, printfulOrderUrl }) {
+  if (!orderAlertEmail) return { skipped: true };
+
+  const rows = await sql`
+    select public_reference, customer_email
+    from orders
+    where id = ${orderId}
+  `;
+  const order = rows[0];
+  if (!order) return { skipped: true };
+
+  return sendNotification({
+    orderId,
+    notificationKey: `fulfillment-alert-${orderId}`,
+    notificationType: 'fulfillment_alert',
+    recipientEmail: orderAlertEmail,
+    subject: `NO GREE / Fulfillment needs attention for ${order.public_reference}`,
+    html: emailShell({
+      eyebrow: 'Fulfillment alert',
+      title: 'Order needs review.',
+      body: `<p>${order.public_reference} has been paid by the customer, but Printful needs an action before fulfillment can continue.</p>`,
+      detail: `<strong>Customer</strong><br />${order.customer_email || 'Email unavailable'}<br /><br /><strong>Printful reason</strong><br />${reason || 'Printful returned the order for review.'}`,
+      actionLabel: printfulOrderUrl ? 'Open Printful order' : 'Open NO GREE status',
+      actionUrl: printfulOrderUrl || orderStatusUrl(order.public_reference),
     }),
   });
 }

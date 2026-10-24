@@ -9,8 +9,8 @@ function normalizeEmail(value) {
 }
 
 function customerStatus(order, shipments) {
-  if (order.payment_status === 'failed' || order.fulfillment_status === 'failed') return 'Action needed';
-  if (order.fulfillment_status === 'cancelled') return 'Cancelled';
+  if (order.payment_status === 'failed') return 'Payment processing';
+  if (order.fulfillment_status === 'failed' || order.fulfillment_status === 'cancelled') return 'Order received';
   if (shipments.length > 0) return 'Shipped';
   if (order.payment_status !== 'paid') return 'Payment processing';
   if (order.fulfillment_status === 'in_progress') return 'In production';

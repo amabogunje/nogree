@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import { sql } from '../lib/db.js';
 import { printfulRequest } from '../lib/printful.js';
-import { sendOrderConfirmation } from '../lib/email.js';
+import { sendFulfillmentAlert, sendOrderConfirmation } from '../lib/email.js';
 
 export const config = {
   api: {
@@ -88,6 +88,14 @@ async function fulfillOrder(session) {
       updated_at = now()
     where id = ${orderId}
   `;
+
+  if (printfulOrder.status === 'failed') {
+    await sendFulfillmentAlert({
+      orderId,
+      reason: printfulOrder.error || 'Printful could not accept the order for fulfillment.',
+      printfulOrderUrl: printfulOrder.dashboard_url,
+    });
+  }
 }
 
 export default async function handler(request, response) {
