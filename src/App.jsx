@@ -5,42 +5,6 @@ const wordmark = 'no\u00b7gree';
 
 function App() {
   const [view, setView] = useState(() => window.location.hash === '#drop-01' ? 'drop' : 'landing');
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState('idle');
-  const [message, setMessage] = useState('');
-
-  async function handleRegister(event) {
-    event.preventDefault();
-
-    setStatus('submitting');
-    setMessage('');
-
-    try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const contentType = response.headers.get('content-type') || '';
-      const result = contentType.includes('application/json')
-        ? await response.json()
-        : { error: 'Registration endpoint is not available. Try refreshing the page.' };
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Could not save registration.');
-      }
-
-      setEmail('');
-      setStatus('success');
-      setMessage('Registered.');
-    } catch (error) {
-      setStatus('error');
-      setMessage(error.message || 'Could not save registration.');
-    }
-  }
 
   function openDrop() {
     const url = new URL(window.location.href);
@@ -82,14 +46,14 @@ function App() {
             onClick={openDrop}
             className="date-stamp border-b border-ink pb-1 text-xs transition hover:border-transparent sm:text-sm"
           >
-            Drop 01
+            Shop Drop 01
           </button>
         </header>
 
         <div className="relative grid flex-1 items-center gap-0 pb-8 pt-16 lg:grid-cols-1 lg:gap-12 lg:pt-10">
           <div className="relative z-20 max-w-4xl">
             <p className="animate-reveal text-xs font-black uppercase tracking-[0.62em] text-smoke/70 [animation-delay:120ms]">
-              Collection 01
+              Drop 01 / Now available
             </p>
 
             <h1 className="hero-word mt-5 animate-reveal text-[clamp(4.5rem,16vw,13.5rem)] lowercase leading-[0.75] [animation-delay:220ms]">
@@ -103,52 +67,29 @@ function App() {
                 Worn with resistance.
               </p>
 
-              <div className="mt-10 h-px w-20 bg-ink" />
-
-              <div className="mt-9 uppercase">
-                <p className="text-sm font-black tracking-[0.42em] text-smoke/75">Launching</p>
-                <p className="mt-3 text-2xl font-black tracking-[0.36em] sm:text-3xl">
-                  July 1, 2026
-                </p>
-              </div>
+              <p className="mt-10 max-w-sm text-sm font-medium leading-7 text-ink/70 sm:text-base">
+                Garment-dyed heavyweight cotton. Made to be worn outside the lines.
+              </p>
             </div>
 
-            <form
-              className="relative z-30 mt-12 flex w-full max-w-xl animate-reveal flex-col border border-ink/55 bg-bone/90 shadow-[0_18px_60px_rgba(13,12,11,0.18)] backdrop-blur-sm [animation-delay:460ms] sm:h-[4.5rem] sm:flex-row"
-              onSubmit={handleRegister}
-            >
-              <label className="sr-only" htmlFor="email">
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="Enter your email"
-                required
-                className="min-h-16 flex-1 bg-transparent px-7 text-base tracking-[0.16em] text-ink outline-none placeholder:text-ink/45"
-              />
+            <div className="relative z-30 mt-12 flex w-full max-w-xl animate-reveal flex-col gap-3 [animation-delay:460ms] sm:flex-row">
               <button
-                type="submit"
-                disabled={status === 'submitting'}
+                type="button"
+                onClick={openDrop}
                 className="group relative min-h-16 overflow-hidden bg-ink px-7 text-xs font-black uppercase tracking-[0.28em] text-bone transition duration-300 hover:bg-bone hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-bone sm:min-w-60"
               >
                 <span className="absolute inset-0 origin-left scale-x-0 bg-bone transition-transform duration-300 group-hover:scale-x-100" />
-                <span className="relative">
-                  {status === 'submitting' ? 'Registering...' : 'Register for Class'}
-                </span>
+                <span className="relative">Shop the drop</span>
               </button>
-            </form>
-            {message ? (
-              <p
-                className="mt-4 text-xs font-black uppercase tracking-[0.3em] text-ink/70"
-                role="status"
-                aria-live="polite"
+              <a
+                href="https://www.instagram.com/no.gree.for.anybody/"
+                target="_blank"
+                rel="noreferrer"
+                className="grid min-h-16 place-items-center border border-ink/55 px-7 text-xs font-black uppercase tracking-[0.23em] text-ink transition hover:bg-ink hover:text-bone sm:min-w-52"
               >
-                {message}
-              </p>
-            ) : null}
+                Follow the language
+              </a>
+            </div>
           </div>
 
           <aside className="model-panel animate-slideIn [animation-delay:280ms]" aria-hidden="true">
@@ -165,7 +106,7 @@ function App() {
         </div>
 
         <footer className="relative z-20 pb-2 text-center text-xs font-black uppercase tracking-[0.5em] text-bone mix-blend-difference sm:text-left">
-          First drop coming soon.
+          No gree for anybody.
         </footer>
       </section>
     </main>
