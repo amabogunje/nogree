@@ -2,6 +2,18 @@ import { useEffect, useState } from 'react';
 import CatalogAdmin from './CatalogAdmin.jsx';
 
 const wordmark = 'no\u00b7gree';
+const usStates = [
+  ['AL', 'Alabama'], ['AK', 'Alaska'], ['AZ', 'Arizona'], ['AR', 'Arkansas'], ['CA', 'California'],
+  ['CO', 'Colorado'], ['CT', 'Connecticut'], ['DE', 'Delaware'], ['FL', 'Florida'], ['GA', 'Georgia'],
+  ['HI', 'Hawaii'], ['ID', 'Idaho'], ['IL', 'Illinois'], ['IN', 'Indiana'], ['IA', 'Iowa'],
+  ['KS', 'Kansas'], ['KY', 'Kentucky'], ['LA', 'Louisiana'], ['ME', 'Maine'], ['MD', 'Maryland'],
+  ['MA', 'Massachusetts'], ['MI', 'Michigan'], ['MN', 'Minnesota'], ['MS', 'Mississippi'], ['MO', 'Missouri'],
+  ['MT', 'Montana'], ['NE', 'Nebraska'], ['NV', 'Nevada'], ['NH', 'New Hampshire'], ['NJ', 'New Jersey'],
+  ['NM', 'New Mexico'], ['NY', 'New York'], ['NC', 'North Carolina'], ['ND', 'North Dakota'], ['OH', 'Ohio'],
+  ['OK', 'Oklahoma'], ['OR', 'Oregon'], ['PA', 'Pennsylvania'], ['RI', 'Rhode Island'], ['SC', 'South Carolina'],
+  ['SD', 'South Dakota'], ['TN', 'Tennessee'], ['TX', 'Texas'], ['UT', 'Utah'], ['VT', 'Vermont'],
+  ['VA', 'Virginia'], ['WA', 'Washington'], ['WV', 'West Virginia'], ['WI', 'Wisconsin'], ['WY', 'Wyoming'],
+];
 
 function colorSwatch(color) {
   const swatches = {
@@ -618,7 +630,10 @@ function SelectionDrawer({
             <form className="mt-8" onSubmit={(event) => { event.preventDefault(); onCalculateShipping(); }}>
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em]">Shipping estimate</p>
               <div className="mt-4 grid grid-cols-[0.9fr_1.1fr] gap-2">
-                <input value={stateCode} onChange={(event) => { setStateCode(event.target.value.toUpperCase().slice(0, 2)); onResetQuote(); }} placeholder="State (e.g. NY)" aria-label="U.S. state code" autoComplete="address-level1" className="h-12 min-w-0 border border-ink/35 bg-transparent px-3 text-sm font-semibold uppercase tracking-[0.12em] outline-none placeholder:text-ink/40 focus:border-ink" />
+                <select value={stateCode} onChange={(event) => { setStateCode(event.target.value); onResetQuote(); }} aria-label="U.S. state" autoComplete="address-level1" className="h-12 min-w-0 rounded-none border border-ink/35 bg-transparent px-3 text-sm font-semibold uppercase tracking-[0.12em] outline-none focus:border-ink">
+                  <option value="">State</option>
+                  {usStates.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+                </select>
                 <input value={zip} onChange={(event) => { setZip(event.target.value.slice(0, 10)); onResetQuote(); }} placeholder="ZIP code" inputMode="numeric" aria-label="ZIP code" autoComplete="postal-code" className="h-12 min-w-0 border border-ink/35 bg-transparent px-3 text-sm font-semibold tracking-[0.1em] outline-none placeholder:text-ink/40 focus:border-ink" />
               </div>
               <button type="submit" disabled={actionStatus !== 'idle'} className="mt-2 h-12 w-full border border-ink bg-transparent text-xs font-semibold uppercase tracking-[0.2em] transition hover:bg-ink hover:text-bone disabled:cursor-wait disabled:opacity-60">
