@@ -143,7 +143,8 @@ function CheckoutReturn({ state, onContinue }) {
 }
 
 function DropShop({ onExit }) {
-  const [product, setProduct] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [activeProductId, setActiveProductId] = useState(null);
   const [loadError, setLoadError] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
@@ -170,7 +171,8 @@ function DropShop({ onExit }) {
 
         const firstProduct = result.products[0];
         const firstVariant = firstProduct.variants.find((variant) => variant.available);
-        setProduct(firstProduct);
+        setProducts(result.products);
+        setActiveProductId(firstProduct.id);
         setSelectedColor(firstVariant?.color || '');
         setSelectedSize(firstVariant?.size || '');
       } catch (error) {
@@ -187,6 +189,8 @@ function DropShop({ onExit }) {
   if (loadError) {
     return <DropNotice message={loadError} onExit={onExit} />;
   }
+
+  const product = products.find((item) => item.id === activeProductId) || products[0];
 
   if (!product) {
     return <DropNotice message="Loading Drop 01." onExit={onExit} />;
@@ -212,6 +216,15 @@ function DropShop({ onExit }) {
     const nextSize = product.variants.find((variant) => variant.available && variant.color === color)?.size || '';
     setSelectedColor(color);
     setSelectedSize(nextSize);
+    resetQuote();
+  }
+
+  function chooseProduct(nextProduct) {
+    const firstVariant = nextProduct.variants.find((variant) => variant.available);
+    setActiveProductId(nextProduct.id);
+    setSelectedColor(firstVariant?.color || '');
+    setSelectedSize(firstVariant?.size || '');
+    setQuantity(1);
     resetQuote();
   }
 
@@ -278,7 +291,7 @@ function DropShop({ onExit }) {
         <button type="button" onClick={onExit} className="brand-mark" aria-label="Return to no·gree home">
           {wordmark}
         </button>
-        <p className="text-xs font-black uppercase tracking-[0.34em]">Drop 01</p>
+        <p className="text-xs font-black uppercase tracking-[0.34em]">Drop 01 / {String(products.length).padStart(2, '0')} pieces</p>
         <button type="button" onClick={onExit} className="text-xs font-black uppercase tracking-[0.24em] underline underline-offset-4">
           Exit
         </button>
@@ -306,7 +319,37 @@ function DropShop({ onExit }) {
             <p className="mt-7 text-lg font-black tracking-[0.08em]">${(itemTotal / 100).toFixed(2)}</p>
           </div>
 
-          <div className="mt-11 border-t border-ink/25 pt-8">
+          <div className="mt-10 border-y border-ink/25 py-6">
+            <p className="text-[0.65rem] font-black uppercase tracking-[0.32em]">The drop</p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {products.map((item, index) => {
+                const firstAvailableVariant = item.variants.find((variant) => variant.available);
+                const isActive = item.id === product.id;
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => chooseProduct(item)}
+                    className={`group relative min-h-24 overflow-hidden border text-left transition ${isActive ? 'border-ink bg-ink text-bone' : 'border-ink/35 hover:border-ink'}`}
+                  >
+                    <img
+                      src={item.imageUrl}
+                      alt=""
+                      className={`pointer-events-none absolute inset-y-0 right-0 h-full w-24 object-cover opacity-55 mix-blend-multiply transition group-hover:scale-105 ${isActive ? 'opacity-35' : ''}`}
+                    />
+                    <span className="relative block max-w-[70%] px-3 py-3 text-[0.6rem] font-black uppercase leading-4 tracking-[0.13em]">
+                      <span className="block text-[0.55rem] opacity-55">0{index + 1}</span>
+                      {item.name.replace(/^No Gree\s*/i, '')}
+                      <span className="mt-1 block">${((firstAvailableVariant?.priceCents || 0) / 100).toFixed(2)}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-10 border-t border-ink/25 pt-8">
             <p className="text-[0.65rem] font-black uppercase tracking-[0.32em]">Color</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {colors.map((color) => (

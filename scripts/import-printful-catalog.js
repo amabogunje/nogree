@@ -1,9 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 
 const storeId = 18952904;
-const syncProductId = 484789501;
-const productName = 'NO GREE Heavyweight Tee';
-const productSlug = 'no-gree-heavyweight-tee';
 const databaseUrl = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
 const token = process.env.PRINTFUL_API_TOKEN;
 
@@ -12,21 +9,41 @@ if (!databaseUrl || !token) {
 }
 
 const sql = neon(databaseUrl);
-const response = await fetch(`https://api.printful.com/sync/products/${syncProductId}`, {
+const headers = {
+  Authorization: `Bearer ${token}`,
+  'X-PF-Store-Id': String(storeId),
+};
+const productsResponse = await fetch('https://api.printful.com/sync/products?limit=100', {
+  headers,
+});
+
+if (!productsResponse.ok) {
+  throw new Error(`Printful catalog request failed with ${productsResponse.status}.`);
+}
+
+const productList = await productsResponse.json();
+
+function createSlug(name, syncProductId) {
+  return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${syncProductId}`;
+}
+
+for (const [index, listedProduct] of (productList.result || []).entries()) {
+  const response = await fetch(`https://api.printful.com/sync/products/${listedProduct.id}`, {
   headers: {
     Authorization: `Bearer ${token}`,
     'X-PF-Store-Id': String(storeId),
   },
-});
+  });
 
-if (!response.ok) {
-  throw new Error(`Printful catalog request failed with ${response.status}.`);
-}
+  if (!response.ok) {
+    throw new Error(`Printful product request failed with ${response.status}.`);
+  }
 
-const { result } = await response.json();
-const firstPreview = result.sync_variants[0]?.files?.find((file) => file.type === 'preview')?.preview_url;
+  const { result } = await response.json();
+  const productName = result.sync_product.name;
+  const firstPreview = result.sync_variants[0]?.files?.find((file) => file.type === 'preview')?.preview_url;
 
-const productRows = await sql`
+  const productRows = await sql`
   insert into products (
     slug,
     name,
@@ -38,16 +55,16 @@ const productRows = await sql`
     display_order
   )
   values (
-    ${productSlug},
+    ${createSlug(productName, result.sync_product.id)},
     ${productName},
-    ${'Garment-dyed heavyweight cotton. Emotional language from Lagos.'},
-    ${syncProductId},
+    ${'Drop 01. Emotional language from Lagos.'},
+    ${result.sync_product.id},
     ${storeId},
     ${firstPreview ?? result.sync_product.thumbnail_url},
     true,
-    1
+    ${index + 1}
   )
-  on conflict (slug) do update
+  on conflict (printful_sync_product_id) do update
   set
     name = excluded.name,
     description = excluded.description,
@@ -60,13 +77,13 @@ const productRows = await sql`
   returning id
 `;
 
-const productId = productRows[0].id;
+  const productId = productRows[0].id;
 
-for (const variant of result.sync_variants) {
-  const imageUrl = variant.files?.find((file) => file.type === 'preview')?.preview_url || variant.product?.image;
-  const retailPriceCents = Math.round(Number(variant.retail_price) * 100);
+  for (const variant of result.sync_variants) {
+    const imageUrl = variant.files?.find((file) => file.type === 'preview')?.preview_url || variant.product?.image;
+    const retailPriceCents = Math.round(Number(variant.retail_price) * 100);
 
-  await sql`
+    await sql`
     insert into product_variants (
       product_id,
       printful_sync_variant_id,
@@ -102,7 +119,8 @@ for (const variant of result.sync_variants) {
       available = excluded.available,
       image_url = excluded.image_url,
       updated_at = now()
-  `;
-}
+    `;
+  }
 
-console.log(`Imported ${result.sync_variants.length} variants for ${productName}.`);
+  console.log(`Imported ${result.sync_variants.length} variants for ${productName}.`);
+}
