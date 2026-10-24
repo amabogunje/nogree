@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import CatalogAdmin from './CatalogAdmin.jsx';
 
-const backgroundWords = ['NO GREE', 'LAGOS', 'DROP 01', 'NO EXCUSES'];
 const wordmark = 'no\u00b7gree';
 
 function colorSwatch(color) {
@@ -529,11 +528,6 @@ function EditorialBackground() {
       <div className="absolute inset-0 animate-grain opacity-25 mix-blend-multiply grain" />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(233,223,206,0.92)_0%,rgba(233,223,206,0.48)_48%,rgba(13,12,11,0.02)_100%)] lg:bg-[linear-gradient(90deg,rgba(233,223,206,0.96)_0%,rgba(233,223,206,0.72)_48%,rgba(233,223,206,0.08)_100%)]" />
 
-      <div className="absolute left-8 top-[34vh] hidden rotate-[-90deg] gap-5 text-[0.65rem] font-black uppercase tracking-[0.42em] text-ink/40 lg:flex">
-        {backgroundWords.map((word) => (
-          <span key={word}>{word}</span>
-        ))}
-      </div>
     </div>
   );
 }
