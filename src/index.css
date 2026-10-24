@@ -293,8 +293,12 @@ input {
   }
 
   .model-panel {
-    min-height: 35vh;
-    margin-top: -3.25rem;
+    min-height: clamp(22rem, 47vh, 30rem);
+    margin-top: -2rem;
+  }
+
+  .hero-photo {
+    object-position: 52% 18%;
   }
 
   .oversize-type {

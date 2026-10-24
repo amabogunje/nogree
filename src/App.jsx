@@ -74,9 +74,17 @@ function App() {
                 href="https://www.instagram.com/no.gree.for.anybody/"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-16 items-center self-start px-2 text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-ink/65 underline decoration-ink/35 underline-offset-4 transition hover:text-ink hover:decoration-ink sm:px-4"
+                aria-label="Follow no·gree on Instagram"
+                className="inline-flex min-h-16 items-center self-start px-3 text-ink/65 transition hover:text-ink sm:gap-2 sm:px-4"
               >
-                Follow us on Instagram
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <rect x="3" y="3" width="18" height="18" rx="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none" />
+                </svg>
+                <span className="hidden text-[0.64rem] font-semibold uppercase tracking-[0.18em] underline decoration-ink/35 underline-offset-4 sm:inline">
+                  Follow us on Instagram
+                </span>
               </a>
             </div>
           </div>
