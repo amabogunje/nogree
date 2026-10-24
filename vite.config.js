@@ -12,6 +12,7 @@ function localRegistrationApi() {
         '/products': 'api/products.js',
         '/shipping-quote': 'api/shipping-quote.js',
         '/checkout': 'api/checkout.js',
+        '/printful/webhook': 'api/printful/webhook.js',
       };
 
       server.middlewares.use('/api', async (req, res, next) => {
@@ -61,7 +62,7 @@ function localRegistrationApi() {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
-  for (const key of ['DATABASE_URL', 'PRINTFUL_API_TOKEN', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET']) {
+  for (const key of ['DATABASE_URL', 'PRINTFUL_API_TOKEN', 'PRINTFUL_WEBHOOK_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET']) {
     process.env[key] ||= env[key];
   }
 
