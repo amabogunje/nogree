@@ -173,7 +173,7 @@ select:focus-visible {
 .model-panel {
   position: absolute;
   top: clamp(7rem, 15vh, 10rem);
-  right: -5vw;
+  right: clamp(-6rem, -5vw, -3rem);
   bottom: -1rem;
   z-index: 1;
   width: min(54vw, 52rem);

@@ -125,7 +125,7 @@ function App() {
     <main className="relative min-h-screen overflow-hidden bg-bone text-ink selection:bg-ink selection:text-bone">
       <EditorialBackground />
 
-      <section className="relative z-10 flex min-h-screen flex-col px-6 py-7 sm:px-10 lg:px-16">
+      <section className="relative z-10 flex min-h-screen w-full flex-col px-6 py-7 sm:px-10 lg:mx-auto lg:max-w-[1600px] lg:px-16">
         <header className="flex items-center justify-between text-sm font-black uppercase tracking-[0.22em] sm:text-base">
           <a href="/" className="brand-mark inline-flex min-h-11 items-center tracking-normal sm:min-h-0" aria-label="no·gree home">
             {wordmark}
