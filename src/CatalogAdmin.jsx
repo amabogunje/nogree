@@ -167,7 +167,7 @@ export default function CatalogAdmin({ onExit }) {
                     type="text"
                     value={product.selector_title || ''}
                     onChange={(event) => updateProduct(product.id, { selector_title: event.target.value })}
-                    placeholder={product.name.replace(/^No Gree\s*/i, '')}
+                    placeholder={product.name.replace(/^no\s*gree\s*\|?\s*/i, '')}
                     className="mt-3 h-12 w-full border border-ink/35 bg-transparent px-3 text-sm outline-none focus:border-ink"
                   />
 

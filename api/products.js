@@ -51,7 +51,7 @@ export default async function handler(request, response) {
           slug: row.slug,
           name: row.name,
           heroTitle: row.hero_title || row.name,
-          selectorTitle: row.selector_title || row.name.replace(/^No Gree\s*/i, ''),
+          selectorTitle: row.selector_title || row.name.replace(/^no\s*gree\s*\|?\s*/i, ''),
           collection: row.collection,
           imageUrl: row.product_image_url,
           displayOrder: row.display_order,
