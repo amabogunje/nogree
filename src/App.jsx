@@ -43,17 +43,17 @@ function App() {
           </a>
         </header>
 
-        <div className="relative grid flex-1 items-center gap-0 pb-8 pt-16 lg:grid-cols-1 lg:gap-12 lg:pt-10">
+        <div className="relative grid flex-1 items-center gap-0 pb-8 pt-9 sm:pt-16 lg:grid-cols-1 lg:gap-12 lg:pt-10">
           <div className="relative z-20 max-w-4xl">
             <p className="animate-reveal text-xs font-black uppercase tracking-[0.62em] text-smoke/70 [animation-delay:120ms]">
               Drop 01 / Now available
             </p>
 
-            <h1 className="hero-word mt-5 animate-reveal text-[clamp(4.5rem,16vw,13.5rem)] lowercase leading-[0.75] [animation-delay:220ms]">
+            <h1 className="hero-word mt-3 animate-reveal text-[clamp(4.5rem,16vw,13.5rem)] lowercase leading-[0.75] [animation-delay:220ms] sm:mt-5">
               {wordmark}
             </h1>
 
-            <div className="mt-12 max-w-3xl animate-reveal [animation-delay:340ms]">
+            <div className="mt-7 max-w-3xl animate-reveal [animation-delay:340ms] sm:mt-12">
               <p className="tagline text-balance text-xl font-black uppercase leading-[1.9] tracking-[0.34em] sm:text-2xl">
                 Emotional language from Lagos
                 <br />
@@ -61,7 +61,7 @@ function App() {
               </p>
             </div>
 
-            <div className="relative z-30 mt-12 flex w-full max-w-xl animate-reveal flex-col gap-1 [animation-delay:460ms] sm:flex-row sm:gap-3">
+            <div className="relative z-30 mt-8 flex w-full max-w-xl animate-reveal flex-col gap-1 [animation-delay:460ms] sm:mt-12 sm:flex-row sm:gap-3">
               <button
                 type="button"
                 onClick={openDrop}
