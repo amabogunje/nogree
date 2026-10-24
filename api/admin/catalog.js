@@ -33,7 +33,8 @@ export default async function handler(request, response) {
         select
           id,
           name,
-          description,
+          hero_title,
+          selector_title,
           image_url as printful_image_url,
           hero_image_url,
           display_order,
@@ -56,7 +57,8 @@ export default async function handler(request, response) {
 
   const id = Number(request.body?.id);
   const heroImageUrl = cleanOptionalText(request.body?.heroImageUrl, 2000);
-  const description = cleanOptionalText(request.body?.description, 500);
+  const heroTitle = cleanOptionalText(request.body?.heroTitle, 120);
+  const selectorTitle = cleanOptionalText(request.body?.selectorTitle, 80);
   const displayOrder = Number(request.body?.displayOrder);
 
   if (!Number.isInteger(id) || !Number.isInteger(displayOrder) || displayOrder < 0 || displayOrder > 999) {
@@ -74,11 +76,12 @@ export default async function handler(request, response) {
       update products
       set
         hero_image_url = ${heroImageUrl},
-        description = ${description},
+        hero_title = ${heroTitle},
+        selector_title = ${selectorTitle},
         display_order = ${displayOrder},
         updated_at = now()
       where id = ${id}
-      returning id, name, description, image_url as printful_image_url, hero_image_url, display_order, active
+      returning id, name, hero_title, selector_title, image_url as printful_image_url, hero_image_url, display_order, active
     `;
 
     if (rows.length === 0) {

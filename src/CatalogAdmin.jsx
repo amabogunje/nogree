@@ -58,7 +58,8 @@ export default function CatalogAdmin({ onExit }) {
         body: JSON.stringify({
           id: product.id,
           heroImageUrl: product.hero_image_url || '',
-          description: product.description || '',
+          heroTitle: product.hero_title || '',
+          selectorTitle: product.selector_title || '',
           displayOrder: Number(product.display_order),
         }),
       }));
@@ -131,7 +132,7 @@ export default function CatalogAdmin({ onExit }) {
         <div className="flex flex-col justify-between gap-6 border-b border-ink/25 pb-8 sm:flex-row sm:items-end">
           <div>
             <h1 className="logo-serif text-5xl leading-none sm:text-7xl">Art direction.</h1>
-            <p className="mt-5 max-w-xl text-sm leading-7 text-ink/65">Printful controls the sellable variants. This room controls the image and language customers encounter first.</p>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-ink/65">Printful controls the sellable variants. This room controls the image and titles customers encounter first.</p>
           </div>
           <p className="text-[0.65rem] font-black uppercase tracking-[0.25em] text-ink/55">{products.length} pieces</p>
         </div>
@@ -152,6 +153,24 @@ export default function CatalogAdmin({ onExit }) {
                   <p className="text-[0.62rem] font-black uppercase tracking-[0.3em] text-ink/55">{product.active ? 'Live product' : 'Hidden product'}</p>
                   <h2 className="logo-serif mt-3 text-4xl leading-none">{product.name}</h2>
 
+                  <label className="mt-8 block text-[0.62rem] font-black uppercase tracking-[0.25em]">Main product title</label>
+                  <input
+                    type="text"
+                    value={product.hero_title || ''}
+                    onChange={(event) => updateProduct(product.id, { hero_title: event.target.value })}
+                    placeholder={product.name}
+                    className="mt-3 h-12 w-full border border-ink/35 bg-transparent px-3 text-sm outline-none focus:border-ink"
+                  />
+
+                  <label className="mt-8 block text-[0.62rem] font-black uppercase tracking-[0.25em]">Drop selector label</label>
+                  <input
+                    type="text"
+                    value={product.selector_title || ''}
+                    onChange={(event) => updateProduct(product.id, { selector_title: event.target.value })}
+                    placeholder={product.name.replace(/^No Gree\s*/i, '')}
+                    className="mt-3 h-12 w-full border border-ink/35 bg-transparent px-3 text-sm outline-none focus:border-ink"
+                  />
+
                   <label className="mt-8 block text-[0.62rem] font-black uppercase tracking-[0.25em]">Hero image URL</label>
                   <input
                     type="url"
@@ -168,13 +187,6 @@ export default function CatalogAdmin({ onExit }) {
                     Use Printful default
                   </button>
 
-                  <label className="mt-8 block text-[0.62rem] font-black uppercase tracking-[0.25em]">Storefront line</label>
-                  <textarea
-                    value={product.description || ''}
-                    onChange={(event) => updateProduct(product.id, { description: event.target.value })}
-                    rows="3"
-                    className="mt-3 w-full resize-y border border-ink/35 bg-transparent px-3 py-3 text-sm leading-6 outline-none focus:border-ink"
-                  />
                 </div>
                 <div className="lg:pt-8">
                   <label className="block text-[0.62rem] font-black uppercase tracking-[0.25em]">Drop order</label>

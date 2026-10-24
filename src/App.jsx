@@ -332,7 +332,7 @@ function DropShop({ onExit }) {
                 {String(index + 1).padStart(2, '0')} / Drop 01
               </span>
               <span className="mt-2 block text-xs font-black uppercase tracking-[0.15em]">
-                {item.name.replace(/^No Gree\s*/i, '')}
+                {item.selectorTitle}
               </span>
               <span className="mt-1 block text-[0.64rem] font-black tracking-[0.16em] opacity-60">
                 ${((firstAvailableVariant?.priceCents || 0) / 100).toFixed(2)}
@@ -348,7 +348,7 @@ function DropShop({ onExit }) {
           <p className="pointer-events-none absolute left-[5%] top-[7%] font-display text-[clamp(5rem,15vw,14rem)] leading-none text-ink/5">01</p>
           <img
             src={selectedColorImage || product.imageUrl}
-            alt={`${product.name} in ${selectedColor}`}
+            alt={`${product.heroTitle} in ${selectedColor}`}
             className="relative z-10 h-auto max-h-[72vh] w-full max-w-2xl object-contain mix-blend-multiply"
           />
           <p className="absolute bottom-7 left-7 z-10 text-[0.62rem] font-black uppercase tracking-[0.34em] sm:bottom-10 sm:left-10">
@@ -359,8 +359,7 @@ function DropShop({ onExit }) {
         <section className="flex flex-col border-t border-ink/25 px-6 py-10 sm:px-10 lg:border-l lg:border-t-0 lg:px-14 lg:py-14">
           <div>
             <p className="text-[0.66rem] font-black uppercase tracking-[0.4em] text-ink/55">{product.collection}</p>
-            <h1 className="mt-4 logo-serif text-5xl leading-none sm:text-6xl">{product.name}</h1>
-            <p className="mt-6 max-w-md text-sm leading-7 text-ink/70">{product.description}</p>
+            <h1 className="mt-4 logo-serif text-5xl leading-none sm:text-6xl">{product.heroTitle}</h1>
             <p className="mt-7 text-lg font-black tracking-[0.08em]">${(itemTotal / 100).toFixed(2)}</p>
           </div>
 
