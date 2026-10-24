@@ -26,7 +26,19 @@ export default async function handler(request, response) {
       from products
       join product_variants on product_variants.product_id = products.id
       where products.active = true
-      order by products.display_order asc, product_variants.color asc, product_variants.size asc
+      order by
+        products.display_order asc,
+        product_variants.color asc,
+        case product_variants.size
+          when 'S' then 1
+          when 'M' then 2
+          when 'L' then 3
+          when 'XL' then 4
+          when '2XL' then 5
+          when '3XL' then 6
+          when '4XL' then 7
+          else 99
+        end asc
     `;
 
     const products = new Map();

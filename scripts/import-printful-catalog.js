@@ -70,6 +70,7 @@ for (const variant of result.sync_variants) {
     insert into product_variants (
       product_id,
       printful_sync_variant_id,
+      printful_catalog_variant_id,
       sku,
       color,
       size,
@@ -81,6 +82,7 @@ for (const variant of result.sync_variants) {
     values (
       ${productId},
       ${variant.id},
+      ${variant.variant_id},
       ${variant.sku || null},
       ${variant.color},
       ${variant.size},
@@ -91,6 +93,7 @@ for (const variant of result.sync_variants) {
     )
     on conflict (printful_sync_variant_id) do update
     set
+      printful_catalog_variant_id = excluded.printful_catalog_variant_id,
       sku = excluded.sku,
       color = excluded.color,
       size = excluded.size,

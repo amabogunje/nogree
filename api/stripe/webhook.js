@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { sql } from '../lib/db.js';
+import { printfulRequest } from '../lib/printful.js';
 
 export const config = {
   api: {
@@ -15,6 +16,77 @@ async function readRawBody(request) {
   }
 
   return Buffer.concat(chunks);
+}
+
+async function fulfillOrder(session) {
+  const orderId = Number(session.metadata?.nogree_order_id);
+
+  if (!Number.isInteger(orderId)) {
+    return;
+  }
+
+  const rows = await sql`
+    select
+      orders.id,
+      orders.fulfillment_status,
+      orders.printful_shipping_method,
+      order_items.product_name,
+      order_items.quantity,
+      order_items.printful_sync_variant_id,
+      products.printful_store_id
+    from orders
+    join order_items on order_items.order_id = orders.id
+    join product_variants on product_variants.id = order_items.product_variant_id
+    join products on products.id = product_variants.product_id
+    where orders.id = ${orderId}
+  `;
+
+  if (rows.length === 0 || rows[0].fulfillment_status !== 'unsubmitted') {
+    return;
+  }
+
+  const shippingDetails = session.shipping_details;
+  const address = shippingDetails?.address;
+  const storeId = rows[0].printful_store_id;
+
+  if (!address?.line1 || !address?.city || !address?.state || !address?.postal_code || address.country !== 'US' || !storeId) {
+    throw new Error('Paid order is missing a valid U.S. shipping address.');
+  }
+
+  const printfulOrder = await printfulRequest('/orders?confirm=1&update_existing=1', {
+    method: 'POST',
+    storeId,
+    body: {
+      external_id: `ng-${orderId}`,
+      shipping: rows[0].printful_shipping_method || 'STANDARD',
+      recipient: {
+        name: shippingDetails.name,
+        address1: address.line1,
+        address2: address.line2 || undefined,
+        city: address.city,
+        state_code: address.state,
+        country_code: address.country,
+        zip: address.postal_code,
+        email: session.customer_details?.email || undefined,
+      },
+      items: rows.map((item) => ({
+        sync_variant_id: item.printful_sync_variant_id,
+        quantity: item.quantity,
+      })),
+    },
+  });
+
+  await sql`
+    update orders
+    set
+      printful_order_id = ${printfulOrder.id},
+      fulfillment_status = ${printfulOrder.status === 'failed' ? 'failed' : 'submitted'},
+      customer_email = coalesce(${session.customer_details?.email || null}, customer_email),
+      shipping_address = ${JSON.stringify(shippingDetails)}::jsonb,
+      printful_payload = ${JSON.stringify(printfulOrder)}::jsonb,
+      updated_at = now()
+    where id = ${orderId}
+  `;
 }
 
 export default async function handler(request, response) {
@@ -45,8 +117,10 @@ export default async function handler(request, response) {
   try {
     const recordedEvents = await sql`
       insert into webhook_events (provider, provider_event_id, payload, processed_at)
-      values ('stripe', ${event.id}, ${JSON.stringify(event)}::jsonb, now())
-      on conflict (provider, provider_event_id) do nothing
+      values ('stripe', ${event.id}, ${JSON.stringify(event)}::jsonb, null)
+      on conflict (provider, provider_event_id) do update
+      set payload = excluded.payload
+      where webhook_events.processed_at is null
       returning id
     `;
 
@@ -70,6 +144,10 @@ export default async function handler(request, response) {
           updated_at = now()
         where stripe_checkout_session_id = ${session.id}
       `;
+
+      if (session.payment_status === 'paid' || event.type === 'checkout.session.async_payment_succeeded') {
+        await fulfillOrder(session);
+      }
     }
 
     if (event.type === 'checkout.session.async_payment_failed') {
@@ -79,6 +157,12 @@ export default async function handler(request, response) {
         where stripe_checkout_session_id = ${session.id}
       `;
     }
+
+    await sql`
+      update webhook_events
+      set processed_at = now()
+      where provider = 'stripe' and provider_event_id = ${event.id}
+    `;
 
     response.status(200).json({ received: true });
   } catch {
