@@ -26,7 +26,7 @@ export default async function handler(request, response) {
   const reference = normalizeReference(request.body?.reference);
   const email = normalizeEmail(request.body?.email);
 
-  if (!/^NG-[A-Z0-9-]{3,32}$/.test(reference) || !/^\S+@\S+\.\S+$/.test(email)) {
+  if (!/^NG-[A-Z0-9-]{1,32}$/.test(reference) || !/^\S+@\S+\.\S+$/.test(email)) {
     response.status(400).json({ error: 'Enter the order number and email used at checkout.' });
     return;
   }
