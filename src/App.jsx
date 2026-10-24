@@ -65,7 +65,7 @@ function App() {
 
       <section className="relative z-10 flex min-h-screen flex-col px-6 py-7 sm:px-10 lg:px-16">
         <header className="flex items-center text-sm font-black uppercase tracking-[0.22em] sm:text-base">
-          <a href="/" className="brand-mark tracking-normal" aria-label="no·gree home">
+          <a href="/" className="brand-mark inline-flex min-h-11 items-center tracking-normal sm:min-h-0" aria-label="no·gree home">
             {wordmark}
           </a>
         </header>
@@ -102,7 +102,7 @@ function App() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Follow no·gree on Instagram"
-                className="inline-flex items-center self-start gap-2 px-2 py-2 text-ink/65 transition hover:text-ink sm:min-h-16 sm:px-4"
+                className="inline-flex min-h-11 items-center self-start gap-2 px-2 py-2 text-ink/65 transition hover:text-ink sm:min-h-16 sm:px-4"
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.7">
                   <rect x="3" y="3" width="18" height="18" rx="5" />
@@ -132,7 +132,7 @@ function App() {
           </aside>
         </div>
 
-        <footer className="relative z-20 pb-2 text-center text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-bone mix-blend-difference sm:text-left">
+        <footer className="hero-footer relative z-20 pb-2 text-center text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-bone mix-blend-difference sm:text-left sm:tracking-[0.28em]">
           No gree for anybody.
         </footer>
       </section>
@@ -322,8 +322,9 @@ function DropShop({ onExit }) {
 
   return (
     <main className="min-h-screen bg-bone text-ink selection:bg-ink selection:text-bone">
+      <p className="sr-only" aria-live="polite">{`${product.heroTitle}, ${selectedColor}, size ${selectedSize} selected.`}</p>
       <header className="flex items-center justify-between border-b border-ink/25 px-6 py-5 sm:px-10 sm:py-6 lg:px-16">
-        <button type="button" onClick={onExit} className="brand-mark" aria-label="Return to no·gree home">
+        <button type="button" onClick={onExit} className="brand-mark inline-flex min-h-11 items-center sm:min-h-0" aria-label="Return to no·gree home">
           {wordmark}
         </button>
         <p className="hidden text-[0.68rem] font-semibold uppercase tracking-[0.24em] sm:block">Drop 01 / {String(products.length).padStart(2, '0')} pieces</p>
@@ -333,7 +334,7 @@ function DropShop({ onExit }) {
       </header>
 
       <nav
-        className="flex overflow-x-auto border-b border-ink/25 px-6 sm:px-10 lg:px-16"
+        className="product-rail flex snap-x snap-mandatory overflow-x-auto border-b border-ink/25 px-6 sm:snap-none sm:px-10 lg:px-16"
         aria-label="Drop 01 products"
       >
         {products.map((item, index) => {
@@ -345,9 +346,9 @@ function DropShop({ onExit }) {
               type="button"
               onClick={() => chooseProduct(item)}
               aria-pressed={isActive}
-              className={`group relative w-48 shrink-0 border-r border-ink/25 px-5 py-5 text-left transition first:border-l sm:w-56 sm:px-7 ${isActive ? 'bg-ink text-bone' : 'hover:bg-ink hover:text-bone'}`}
+              className={`group relative w-44 shrink-0 snap-start border-r border-ink/25 px-4 py-3 text-left transition first:border-l sm:w-56 sm:px-7 sm:py-5 ${isActive ? 'bg-ink text-bone' : 'hover:bg-ink hover:text-bone'}`}
             >
-              <span className="block text-[0.56rem] font-semibold uppercase tracking-[0.24em] opacity-55">
+              <span className="block text-[0.625rem] font-semibold uppercase tracking-[0.2em] opacity-55 sm:text-[0.56rem] sm:tracking-[0.24em]">
                 {String(index + 1).padStart(2, '0')} / Drop 01
               </span>
               <span className="mt-2 block truncate text-xs font-semibold uppercase tracking-[0.13em]">
@@ -359,28 +360,28 @@ function DropShop({ onExit }) {
       </nav>
 
       <section className="grid min-h-[calc(100vh-10.8rem)] lg:grid-cols-[minmax(0,1.12fr)_minmax(25rem,0.88fr)]">
-        <div className="relative flex min-h-[42vh] items-center justify-center overflow-hidden bg-[#d9d0c0] px-7 py-12 sm:min-h-[54vh] sm:px-14 sm:py-14 lg:min-h-0 lg:px-20">
+        <div className="relative flex min-h-[36vh] items-center justify-center overflow-hidden bg-[#d9d0c0] px-6 py-8 sm:min-h-[54vh] sm:px-14 sm:py-14 lg:min-h-0 lg:px-20">
           <div className="pointer-events-none absolute inset-0 opacity-20 grain mix-blend-multiply" />
           <p className="pointer-events-none absolute left-[5%] top-[7%] font-display text-[clamp(5rem,15vw,14rem)] leading-none text-ink/5">{String(productIndex).padStart(2, '0')}</p>
           <img
             src={displayImage}
             alt={`${product.heroTitle} in ${selectedColor}`}
-            className="relative z-10 h-auto max-h-[72vh] w-full max-w-2xl object-contain mix-blend-multiply"
+            className="relative z-10 h-auto max-h-[44vh] w-full max-w-2xl object-contain mix-blend-multiply sm:max-h-[72vh]"
           />
-          <p className="absolute bottom-7 left-7 z-10 text-[0.62rem] font-semibold uppercase tracking-[0.25em] sm:bottom-10 sm:left-10">
+          <p className="absolute bottom-5 left-6 z-10 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] sm:bottom-10 sm:left-10 sm:text-[0.62rem] sm:tracking-[0.25em]">
             Emotional language from Lagos
           </p>
         </div>
 
         <section className="flex flex-col border-t border-ink/25 px-6 py-10 sm:px-10 lg:border-l lg:border-t-0 lg:px-14 lg:py-14">
           <div>
-            <p className="text-[0.66rem] font-semibold uppercase tracking-[0.28em] text-ink/55">{product.collection}</p>
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.22em] text-ink/55 sm:text-[0.66rem] sm:tracking-[0.28em]">{product.collection}</p>
             <h1 className="mt-4 max-w-xl text-balance logo-serif text-[clamp(2.8rem,7vw,4rem)] leading-[0.9]">{product.heroTitle}</h1>
             <p className="mt-7 text-base font-semibold tracking-[0.06em]">${(itemTotal / 100).toFixed(2)}</p>
           </div>
 
           <div className="mt-10 border-t border-ink/25 pt-8">
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.24em]">Color</p>
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.2em] sm:text-[0.65rem] sm:tracking-[0.24em]">Color</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {colors.map((color) => (
                 <button
@@ -396,7 +397,7 @@ function DropShop({ onExit }) {
               ))}
             </div>
 
-            <p className="mt-8 text-[0.65rem] font-semibold uppercase tracking-[0.24em]">Size</p>
+            <p className="mt-8 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] sm:text-[0.65rem] sm:tracking-[0.24em]">Size</p>
             <div className="mt-4 grid grid-cols-4 gap-2">
               {sizes.map((size) => (
                 <button
@@ -415,25 +416,25 @@ function DropShop({ onExit }) {
           <div className="mt-10 border-t border-ink/25 pt-8">
             <div className="flex items-end justify-between gap-5">
               <div>
-                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.24em]">Quantity</p>
+                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.2em] sm:text-[0.65rem] sm:tracking-[0.24em]">Quantity</p>
                 <div className="mt-4 flex h-12 border border-ink/35">
-                  <button type="button" onClick={() => { setQuantity(Math.max(1, quantity - 1)); resetQuote(); }} className="w-12 text-lg hover:bg-ink hover:text-bone" aria-label="Decrease quantity">-</button>
+                  <button type="button" onClick={() => { setQuantity(Math.max(1, quantity - 1)); resetQuote(); }} className="h-12 w-12 text-lg transition active:bg-ink active:text-bone hover:bg-ink hover:text-bone" aria-label="Decrease quantity">-</button>
                   <output className="grid w-12 place-items-center border-x border-ink/35 text-sm font-black">{quantity}</output>
-                  <button type="button" onClick={() => { setQuantity(Math.min(10, quantity + 1)); resetQuote(); }} className="w-12 text-lg hover:bg-ink hover:text-bone" aria-label="Increase quantity">+</button>
+                  <button type="button" onClick={() => { setQuantity(Math.min(10, quantity + 1)); resetQuote(); }} className="h-12 w-12 text-lg transition active:bg-ink active:text-bone hover:bg-ink hover:text-bone" aria-label="Increase quantity">+</button>
                 </div>
               </div>
-              <p className="max-w-44 text-right text-[0.63rem] font-black uppercase leading-5 tracking-[0.18em] text-ink/55">
+              <p className="max-w-44 text-right text-[0.6875rem] font-semibold uppercase leading-5 tracking-[0.14em] text-ink/55 sm:text-[0.63rem] sm:font-black sm:tracking-[0.18em]">
                 U.S. delivery only
               </p>
             </div>
 
-            <p className="mt-8 text-[0.65rem] font-semibold uppercase tracking-[0.24em]">Shipping estimate</p>
+            <p className="mt-8 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] sm:text-[0.65rem] sm:tracking-[0.24em]">Shipping estimate</p>
             <form className="mt-4" onSubmit={(event) => { event.preventDefault(); calculateShipping(); }}>
             <div className="grid grid-cols-[0.8fr_1.2fr] gap-2">
               <input
                 value={stateCode}
                 onChange={(event) => { setStateCode(event.target.value.toUpperCase().slice(0, 2)); resetQuote(); }}
-                placeholder="State (NY)"
+                placeholder="State (e.g. NY)"
                 aria-label="U.S. state code"
                 autoComplete="address-level1"
                 className="h-12 min-w-0 border border-ink/35 bg-transparent px-4 text-sm font-black uppercase tracking-[0.16em] outline-none placeholder:text-ink/40 focus:border-ink"
@@ -480,7 +481,7 @@ function DropShop({ onExit }) {
             ) : null}
           </div>
 
-          {!quote && !actionMessage ? <p className="mt-4 text-[0.62rem] font-semibold uppercase tracking-[0.13em] text-ink/55">Enter a U.S. state and ZIP to calculate delivery.</p> : null}
+          {!quote && !actionMessage ? <p className="mt-4 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-ink/55 sm:text-[0.62rem] sm:tracking-[0.13em]">Enter a U.S. state and ZIP to calculate delivery.</p> : null}
           {actionMessage ? <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-red-800" role="status">{actionMessage}</p> : null}
           <button
             type="button"

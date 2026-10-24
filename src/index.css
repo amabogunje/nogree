@@ -75,8 +75,18 @@ input:focus-visible {
   transition: transform var(--transition);
 }
 
-.brand-mark:hover::after {
-  transform: scaleX(1);
+@media (hover: hover) {
+  .brand-mark:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+.product-rail {
+  scrollbar-width: none;
+}
+
+.product-rail::-webkit-scrollbar {
+  display: none;
 }
 
 .date-stamp {
@@ -285,7 +295,8 @@ input:focus-visible {
 
 @media (max-width: 640px) {
   .hero-word {
-    letter-spacing: -0.07em;
+    font-size: clamp(3.75rem, 19vw, 4.5rem);
+    letter-spacing: -0.06em;
   }
 
   .date-stamp {
@@ -294,14 +305,14 @@ input:focus-visible {
   }
 
   .tagline {
-    font-size: clamp(0.78rem, 3.35vw, 0.98rem);
-    line-height: 1.8;
-    letter-spacing: 0.075em;
+    font-size: 0.875rem;
+    line-height: 1.65;
+    letter-spacing: 0.08em;
   }
 
   .model-panel {
-    min-height: clamp(22rem, 47vh, 30rem);
-    margin-top: -2rem;
+    min-height: clamp(20rem, 43vh, 27rem);
+    margin-top: -0.75rem;
   }
 
   .hero-photo {
@@ -310,6 +321,12 @@ input:focus-visible {
 
   .oversize-type {
     font-size: 35vw;
+  }
+
+  .hero-footer {
+    color: var(--bone);
+    mix-blend-mode: normal;
+    text-shadow: 0 1px 10px rgba(13, 12, 11, 0.85);
   }
 }
 
