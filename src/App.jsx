@@ -297,7 +297,37 @@ function DropShop({ onExit }) {
         </button>
       </header>
 
-      <section className="grid min-h-[calc(100vh-5.7rem)] lg:grid-cols-[minmax(0,1.12fr)_minmax(25rem,0.88fr)]">
+      <nav
+        className="flex overflow-x-auto border-b border-ink/25 px-6 sm:px-10 lg:px-16"
+        aria-label="Drop 01 products"
+      >
+        {products.map((item, index) => {
+          const firstAvailableVariant = item.variants.find((variant) => variant.available);
+          const isActive = item.id === product.id;
+
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => chooseProduct(item)}
+              aria-current={isActive ? 'page' : undefined}
+              className={`group relative shrink-0 border-r border-ink/25 px-5 py-5 text-left transition first:border-l sm:min-w-52 sm:px-7 ${isActive ? 'bg-ink text-bone' : 'hover:bg-ink hover:text-bone'}`}
+            >
+              <span className="block text-[0.56rem] font-black uppercase tracking-[0.28em] opacity-55">
+                {String(index + 1).padStart(2, '0')} / Drop 01
+              </span>
+              <span className="mt-2 block text-xs font-black uppercase tracking-[0.15em]">
+                {item.name.replace(/^No Gree\s*/i, '')}
+              </span>
+              <span className="mt-1 block text-[0.64rem] font-black tracking-[0.16em] opacity-60">
+                ${((firstAvailableVariant?.priceCents || 0) / 100).toFixed(2)}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
+      <section className="grid min-h-[calc(100vh-10.8rem)] lg:grid-cols-[minmax(0,1.12fr)_minmax(25rem,0.88fr)]">
         <div className="relative flex min-h-[54vh] items-center justify-center overflow-hidden bg-[#d9d0c0] px-7 py-14 sm:px-14 lg:min-h-0 lg:px-20">
           <div className="pointer-events-none absolute inset-0 opacity-20 grain mix-blend-multiply" />
           <p className="pointer-events-none absolute left-[5%] top-[7%] font-display text-[clamp(5rem,15vw,14rem)] leading-none text-ink/5">01</p>
@@ -317,36 +347,6 @@ function DropShop({ onExit }) {
             <h1 className="mt-4 logo-serif text-5xl leading-none sm:text-6xl">{product.name}</h1>
             <p className="mt-6 max-w-md text-sm leading-7 text-ink/70">{product.description}</p>
             <p className="mt-7 text-lg font-black tracking-[0.08em]">${(itemTotal / 100).toFixed(2)}</p>
-          </div>
-
-          <div className="mt-10 border-y border-ink/25 py-6">
-            <p className="text-[0.65rem] font-black uppercase tracking-[0.32em]">The drop</p>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              {products.map((item, index) => {
-                const firstAvailableVariant = item.variants.find((variant) => variant.available);
-                const isActive = item.id === product.id;
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => chooseProduct(item)}
-                    className={`group relative min-h-24 overflow-hidden border text-left transition ${isActive ? 'border-ink bg-ink text-bone' : 'border-ink/35 hover:border-ink'}`}
-                  >
-                    <img
-                      src={item.imageUrl}
-                      alt=""
-                      className={`pointer-events-none absolute inset-y-0 right-0 h-full w-24 object-cover opacity-55 mix-blend-multiply transition group-hover:scale-105 ${isActive ? 'opacity-35' : ''}`}
-                    />
-                    <span className="relative block max-w-[70%] px-3 py-3 text-[0.6rem] font-black uppercase leading-4 tracking-[0.13em]">
-                      <span className="block text-[0.55rem] opacity-55">0{index + 1}</span>
-                      {item.name.replace(/^No Gree\s*/i, '')}
-                      <span className="mt-1 block">${((firstAvailableVariant?.priceCents || 0) / 100).toFixed(2)}</span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
           <div className="mt-10 border-t border-ink/25 pt-8">
