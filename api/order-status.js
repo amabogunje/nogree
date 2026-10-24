@@ -34,7 +34,7 @@ export default async function handler(request, response) {
 
   try {
     const orderRows = await sql`
-      select id, public_reference, created_at, payment_status, fulfillment_status
+      select id, public_reference, created_at, refunded_at, payment_status, fulfillment_status
       from orders
       where (public_reference = ${reference} or ('NG-' || id::text) = ${reference})
         and lower(customer_email) = ${email}
@@ -66,6 +66,7 @@ export default async function handler(request, response) {
       order: {
         reference: order.public_reference,
         placedAt: order.created_at,
+        refundedAt: order.refunded_at,
         status: customerStatus(order, shipments),
         items,
         shipments,

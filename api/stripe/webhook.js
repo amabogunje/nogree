@@ -177,9 +177,10 @@ export default async function handler(request, response) {
       const isFullyRefunded = charge.refunded === true || charge.amount_refunded >= charge.amount;
 
       if (paymentIntentId && isFullyRefunded) {
+        const refundedAt = new Date(event.created * 1000).toISOString();
         const refundedOrders = await sql`
           update orders
-          set payment_status = 'refunded', updated_at = now()
+          set payment_status = 'refunded', refunded_at = coalesce(refunded_at, ${refundedAt}), updated_at = now()
           where stripe_payment_intent_id = ${paymentIntentId}
             and payment_status <> 'refunded'
           returning id

@@ -279,7 +279,10 @@ function OrderStatus({ onExit }) {
                   <p className="text-[0.62rem] font-black uppercase tracking-[0.26em] text-ink/55">{order.reference}</p>
                   <h2 className="logo-serif mt-3 text-3xl leading-none sm:text-4xl">{order.status}</h2>
                 </div>
-                <p className="pt-1 text-right text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/55">Placed<br />{new Date(order.placedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                <p className="pt-1 text-right text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink/55">
+                  Placed<br />{new Date(order.placedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  {order.refundedAt ? <><br /><br />Refunded<br />{new Date(order.refundedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</> : null}
+                </p>
               </div>
 
               <div className="mt-8 border-t border-ink/15 pt-6 text-sm leading-7 text-ink/70">
@@ -295,7 +298,13 @@ function OrderStatus({ onExit }) {
                     </div>
                   ))}
                 </div>
-              ) : <p className="mt-7 border-t border-ink/15 pt-6 text-sm leading-7 text-ink/65">Your pieces are being prepared. Carrier tracking will appear here once the package leaves the facility.</p>}
+              ) : (
+                <p className="mt-7 border-t border-ink/15 pt-6 text-sm leading-7 text-ink/65">
+                  {order.status === 'Refunded'
+                    ? 'This order was refunded. No fulfillment or shipment will follow.'
+                    : 'Your pieces are being prepared. Carrier tracking will appear here once the package leaves the facility.'}
+                </p>
+              )}
             </section>
           ) : null}
         </div>
